@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 import { Home, Book, Users, UserPlus, FileText, BarChart2, Award, Trash2, Eye, Edit, MoreVertical, Plus, Download, Filter } from 'lucide-react'
-import { Button } from '../componentes/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../componentes/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../componentes/ui/select';
-import { Input } from '../componentes/ui/input';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../componentes/ui/dropdown-menu';
-
-
+import { Button } from '../componentes/ui/button.tsx'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../componentes/ui/table'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../componentes/ui/select.tsx'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../componentes/ui/dropdown-menu'
+import AddModal from '../componentes/AddModal.tsx'
+import ViewDetailsModal from '../componentes/ViewDetailsModal.tsx'
+import EditDetailsModal from '../componentes/EditDetailsModal.tsx'
+import { Input } from '../componentes/ui/input.tsx'
 
 // Mock data
 const formaciones = [
@@ -42,6 +43,11 @@ export default function MainLayout() {
   const [filteredFormaciones, setFilteredFormaciones] = useState(formaciones)
   const [filteredParticipantes, setFilteredParticipantes] = useState(reporteParticipantes)
   const [filters, setFilters] = useState({})
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState(null)
+  const [modalType, setModalType] = useState('')
 
   const handleFilterChange = (key, value, dataType) => {
     const newFilters = { ...filters, [key]: value }
@@ -69,9 +75,32 @@ export default function MainLayout() {
     alert("Exportación a Excel simulada. Ver consola para detalles.")
   }
 
-  const handleDeleteFormacion = (id) => {
-    console.log(`Eliminando formación con ID: ${id}`)
-    // Aquí iría la lógica para eliminar la formación
+  const handleAdd = (type) => {
+    setModalType(type)
+    setIsAddModalOpen(true)
+  }
+
+  const handleView = (item, type) => {
+    setSelectedItem(item)
+    setModalType(type)
+    setIsViewModalOpen(true)
+  }
+
+  const handleEdit = (item, type) => {
+    setSelectedItem(item)
+    setModalType(type)
+    setIsEditModalOpen(true)
+  }
+
+  const handleDelete = (id, type) => {
+    console.log(`Eliminando ${type} con ID: ${id}`)
+    // Aquí iría la lógica para eliminar el elemento
+  }
+
+  const handleSave = (data) => {
+    console.log("Guardando datos:", data)
+    // Aquí iría la lógica para guardar los datos
+    setIsEditModalOpen(false)
   }
 
   const renderContent = () => {
@@ -81,7 +110,7 @@ export default function MainLayout() {
           <div>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Formaciones</h2>
-              <Button>+ Agregar Formación</Button>
+              <Button onClick={() => handleAdd('formacion')}>+ Agregar Formación</Button>
             </div>
             <Table>
               <TableHeader>
@@ -120,14 +149,14 @@ export default function MainLayout() {
                     <TableCell>{formacion.total}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleView(formacion, 'formacion')}><Eye className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(formacion, 'formacion')}><Edit className="h-4 w-4" /></Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
-                            <DropdownMenuItem onSelect={() => handleDeleteFormacion(formacion.id)}>
+                            <DropdownMenuItem onSelect={() => handleDelete(formacion.id, 'formacion')}>
                               <Trash2 className="mr-2 h-4 w-4" />
                               <span>Eliminar</span>
                             </DropdownMenuItem>
@@ -146,7 +175,7 @@ export default function MainLayout() {
           <div>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Estudiantes</h2>
-              <Button>+ Agregar Estudiante</Button>
+              <Button onClick={() => handleAdd('estudiante')}>+ Agregar Estudiante</Button>
             </div>
             <Table>
               <TableHeader>
@@ -173,9 +202,9 @@ export default function MainLayout() {
                     <TableCell>{estudiante.facultad}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleView(estudiante, 'estudiante')}><Eye className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(estudiante, 'estudiante')}><Edit className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(estudiante.rut, 'estudiante')}><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -242,9 +271,9 @@ export default function MainLayout() {
       case 'usuarios':
         return (
           <div>
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex  justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Usuarios</h2>
-              <Button>+ Agregar Usuario</Button>
+              <Button onClick={() => handleAdd('usuario')}>+ Agregar Usuario</Button>
             </div>
             <Table>
               <TableHeader>
@@ -263,9 +292,9 @@ export default function MainLayout() {
                     <TableCell>{usuario.nombre}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleView(usuario, 'usuario')}><Eye className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(usuario, 'usuario')}><Edit className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(usuario.rut, 'usuario')}><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -277,9 +306,9 @@ export default function MainLayout() {
       case 'competencias':
         return (
           <div>
-            <div className="flex justify-between items-center  mb-4">
+            <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Competencias</h2>
-              <Button>+ Agregar Competencia</Button>
+              <Button onClick={() => handleAdd('competencia')}>+ Agregar Competencia</Button>
             </div>
             <Table>
               <TableHeader>
@@ -297,7 +326,11 @@ export default function MainLayout() {
                     <TableCell>{competencia.nombre}</TableCell>
                     <TableCell>{competencia.descripcion}</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>
+                      <div className="flex space-x-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleView(competencia, 'competencia')}><Eye className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(competencia, 'competencia')}><Edit className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(competencia.codigo, 'competencia')}><Trash2 className="h-4 w-4" /></Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -473,6 +506,26 @@ export default function MainLayout() {
       <main className="flex-1 p-8 overflow-auto">
         {renderContent()}
       </main>
+
+      {/* Modals */}
+      <AddModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        type={modalType}
+      />
+      <ViewDetailsModal
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        data={selectedItem}
+        type={modalType}
+      />
+      <EditDetailsModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        data={selectedItem}
+        type={modalType}
+        onSave={handleSave}
+      />
     </div>
   )
 }
