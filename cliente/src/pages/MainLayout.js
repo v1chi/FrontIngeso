@@ -10,25 +10,6 @@ import ViewDetailsModal from '../componentes/ViewDetailsModal.tsx'
 import EditDetailsModal from '../componentes/EditDetailsModal.tsx'
 import { Input } from '../componentes/ui/input.tsx'
 
-async function getEstudiantes() {
-  try {
-    const response = await axios.get('http://localhost:3001/estudiantes');
-    return response.data;
-  } catch (error) {
-    console.error('Error al obtener los estudiantes:', error);
-    return [];
-  }
-}
-
-async function getUsuarios() {
-  try {
-    const response = await axios.get('http://localhost:3001/usuarios');
-    return response.data;
-  } catch (error) {
-    console.error('Error al obtener los usuarios:', error);
-    return [];
-  }
-}
 /*
 async function getFormaciones() {
   try {
@@ -72,25 +53,28 @@ export default function MainLayout() {
   const [estudiantes, setEstudiantes] = useState([])
   //const [formaciones, setFormaciones] = useState([])
 
-  useEffect(() => {
-    async function fetchUsuarios() {
-      try {
-        const data = await getUsuarios();
-        setUsuarios(data);
-      } catch (error) {
-        console.error('Error al cargar los usuarios:', error);
-      }
+  async function fetchEstudiantes() {
+    try {
+      const response = await axios.get('http://localhost:3001/estudiantes');
+      setEstudiantes(response.data);
+    } catch (error) {
+      console.error('Error al obtener los estudiantes:', error);
+      return [];
     }
-    fetchUsuarios();
+  }
 
-    async function fetchEstudiantes() {
-      try {
-        const data = await getEstudiantes();
-        setEstudiantes(data);
-      } catch (error) {
-        console.error('Error al cargar los estudiantes:', error);
-      }
+  async function fetchUsuarios() {
+    try {
+      const response = await axios.get('http://localhost:3001/usuarios');
+      setUsuarios(response.data);
+    } catch (error) {
+      console.error('Error al obtener los usuarios:', error);
+      return [];
     }
+  }
+
+  useEffect(() => {
+    fetchUsuarios();
     fetchEstudiantes();
     /*
     async function fetchFormaciones(){
@@ -566,7 +550,11 @@ export default function MainLayout() {
       {/* Modals */}
       <AddModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={() => { 
+          setIsAddModalOpen(false);
+          fetchEstudiantes();
+          fetchUsuarios();
+        }}
         type={modalType}
       />
       <ViewDetailsModal

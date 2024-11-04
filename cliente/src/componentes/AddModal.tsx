@@ -9,7 +9,7 @@ import { Button } from '../componentes/ui/button.tsx'
 import { Input } from '../componentes/ui/input.tsx'
 import { Label } from './ui/label.tsx'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select.tsx'
-
+import axios from 'axios';
 
 interface AddModalProps {
   isOpen: boolean;
@@ -19,7 +19,15 @@ interface AddModalProps {
 }
 
 export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProps) {
-  const [formData, setFormData] = useState({})
+  const [formData, setFormData] = useState({
+    rut: '',
+    nombreCompleto: '',
+    unidad: '',
+    carrera: '',
+    correo: '',
+    sedeEstudiante: '',
+    egresado: false
+  })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -28,6 +36,56 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  async function addStudent(data): Promise<any> {
+
+    //Se ajusta el formData para coincidir los nombres entre DB-Front
+    const adjustedData = {
+      ...data,
+      nombreCompleto: data.nombre,
+      sedeEstudiante: data.sede
+    };
+
+    delete adjustedData.nombre;
+    delete adjustedData.sede;
+
+    try {
+      console.log(`Datos recibidos: ${JSON.stringify(formData, null, 2)}`);
+      const response = await axios.post('http://localhost:3001/estudiantes', data, {
+          headers: {
+              'Content-Type': 'application/json',
+          },
+      });
+      console.log("Respuesta del servidor:", response.data);
+    } catch (error) {
+        console.error("Error al agregar estudiante:", error);
+    }
+    
+    if (onSave) {
+      onSave(formData)
+    }
+    onClose()
+  }
+
+  async function addUser(data): Promise<any> {
+
+    try {
+      console.log(`Datos recibidos: ${JSON.stringify(formData, null, 2)}`);
+      const response = await axios.post('http://localhost:3001/usuarios', data, {
+          headers: {
+              'Content-Type': 'application/json',
+          },
+      });
+      console.log("Respuesta del servidor:", response.data);
+    } catch (error) {
+        console.error("Error al agregar estudiante:", error);
+    }
+    
+    if (onSave) {
+      onSave(formData)
+    }
+    onClose()
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -108,34 +166,24 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
 
       case 'estudiante':
         return (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit = {(e) => {
+            e.preventDefault();
+            addStudent(formData);
+          }} className="space-y-4">
+
             <div className="space-y-2">
               <Label htmlFor="rut">RUT</Label>
               <Input id="rut" name="rut" onChange={handleInputChange} />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="nombre">Nombre Completo</Label>
-              <Input id="nombre" name="nombre" onChange={handleInputChange} />
+              <Label htmlFor="nombreCompleto">Nombre Completo</Label>
+              <Input id="nombreCompleto" name="nombreCompleto" onChange={handleInputChange} />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="genero">Género</Label>
-              <Select name="genero" onValueChange={(value) => handleSelectChange("genero", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar género" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Masculino">Masculino</SelectItem>
-                  <SelectItem value="Femenino">Femenino</SelectItem>
-                  <SelectItem value="Otro">Otro</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="correo">Correo</Label>
-              <Input type="email" id="correo" name="correo" onChange={handleInputChange} />
+              <Label htmlFor="unidad">Unidad</Label>
+              <Input id="unidad" name="unidad" onChange={handleInputChange} />
             </div>
 
             <div className="space-y-2">
@@ -144,8 +192,34 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="facultad">Facultad</Label>
-              <Input id="facultad" name="facultad" onChange={handleInputChange} />
+              <Label htmlFor="correo">Correo</Label>
+              <Input type="email" id="correo" name="correo" onChange={handleInputChange} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="sedeEstudiante">Sede</Label>
+              <Select id="sedeEstudiante" name="sedeEstudiante" onValueChange={(value) => handleSelectChange("sedeEstudiante", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sede del estudiante" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Coquimbo">Coquimbo</SelectItem>
+                  <SelectItem value="Antofagasta">Antofagasta</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="egresado">Egresado</Label>
+              <Select id="egresado" name="egresado" onValueChange={(value) => handleSelectChange("egresado", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="¿El estudiante egresó?" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Si</SelectItem>
+                  <SelectItem value="false">No</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="pt-4 flex justify-end space-x-2">
@@ -156,20 +230,34 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
                 Agregar Estudiante
               </Button>
             </div>
-          </form>
+          </form> 
         )
 
       case 'usuario':
         return (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="rut">RUT</Label>
-              <Input id="rut" name="rut" onChange={handleInputChange} />
-            </div>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            addUser(formData);
+          }} className="space-y-4">
 
             <div className="space-y-2">
               <Label htmlFor="nombre">Nombre</Label>
               <Input id="nombre" name="nombre" onChange={handleInputChange} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="rut">RUT</Label>
+              <Input id="rut" name="rut" onChange={handleInputChange} />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="correo">Correo</Label>
+              <Input id="correo" name="correo" onChange={handleInputChange} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="clave">Contraseña</Label>
+              <Input type='password' id="clave" name="clave" onChange={handleInputChange} />
             </div>
 
             <div className="space-y-2">
