@@ -41,12 +41,12 @@ export default function ViewDetailsModal({ isOpen, onClose, data, type }: ViewDe
         return (
           <div className="space-y-2">
             <p><strong>RUT:</strong> {data.rut}</p>
-            <p><strong>Nombre:</strong> {data.nombre}</p>
-            <p><strong>Género:</strong> {data.genero}</p>
-            <p><strong>Correo:</strong> {data.correo}</p>
+            <p><strong>Nombre:</strong> {data.nombreCompleto}</p>
+            <p><strong>Unidad:</strong> {data.unidad}</p>
             <p><strong>Carrera:</strong> {data.carrera}</p>
+            <p><strong>Correo:</strong> {data.correo}</p>
+            <p><strong>Sede:</strong> {data.sedeEstudiante}</p>
             <p><strong>Egresado:</strong> {data.egresado ? 'Sí' : 'No'}</p>
-            <p><strong>Facultad:</strong> {data.facultad}</p>
           </div>
         )
       case 'usuario':

@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 import { Home, Book, Users, UserPlus, FileText, BarChart2, Award, Trash2, Eye, Edit, MoreVertical, Plus, Download, Filter } from 'lucide-react'
 import { Button } from '../componentes/ui/button.tsx'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../componentes/ui/table'
@@ -9,23 +10,42 @@ import ViewDetailsModal from '../componentes/ViewDetailsModal.tsx'
 import EditDetailsModal from '../componentes/EditDetailsModal.tsx'
 import { Input } from '../componentes/ui/input.tsx'
 
+async function getEstudiantes() {
+  try {
+    const response = await axios.get('http://localhost:3001/estudiantes');
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener los estudiantes:', error);
+    return [];
+  }
+}
+
+async function getUsuarios() {
+  try {
+    const response = await axios.get('http://localhost:3001/usuarios');
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener los usuarios:', error);
+    return [];
+  }
+}
+/*
+async function getFormaciones() {
+  try {
+    const response = await axios.get('http://localhost:3001/formaciones');
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener las formaciones:', error);
+    return [];
+  }
+}
+*/
 // Mock data
 const formaciones = [
   { id: 1, sede: "Antofagasta", nombre: "Formación avanzada", modalidad: "Presencial", periodo: "2024-II", estado: "Abierta", relator: "Juan Pérez", fechaInicio: "2024-08-21", fechaTermino: "2024-09-15", aprobados: 15, reprobados: 3, desercion: 2, total: 20 },
   { id: 2, sede: "Antofagasta", nombre: "Formación inicial", modalidad: "Online", periodo: "2024-II", estado: "Cerrada", relator: "María González", fechaInicio: "2024-09-27", fechaTermino: "2024-10-08", aprobados: 18, reprobados: 1, desercion: 1, total: 20 },
   { id: 3, sede: "Coquimbo", nombre: "Formación especializada", modalidad: "B-Learning", periodo: "2025-I", estado: "Abierta", relator: "Carlos Rodríguez", fechaInicio: "2025-03-15", fechaTermino: "2025-04-30", aprobados: 12, reprobados: 2, desercion: 1, total: 15 },
 ]
-
-const estudiantes = [
-  { rut: "12345678-9", nombre: "Juan Pérez", genero: "Masculino", correo: "juan.perez@example.com", carrera: "Ingeniería Civil", egresado: false, facultad: "Facultad de Ingeniería" },
-  { rut: "98765432-1", nombre: "María González", genero: "Femenino", correo: "maria.gonzalez@example.com", carrera: "Psicología", egresado: true, facultad: "Facultad de Ciencias Sociales" },
-]
-
-const usuarios = [
-  { tipo: "Administrador", rut: "11111111-1", nombre: "Admin User" },
-  { tipo: "Usuario", rut: "22222222-2", nombre: "Normal User" },
-]
-
 const competencias = [
   { codigo: "C1", nombre: "Construir estrategias pedagógicas", descripcion: "C1" },
   { codigo: "C2", nombre: "Implementar el proceso de enseñanza aprendizaje", descripcion: "C2" },
@@ -48,6 +68,42 @@ export default function MainLayout() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState(null)
   const [modalType, setModalType] = useState('')
+  const [usuarios, setUsuarios] = useState([])
+  const [estudiantes, setEstudiantes] = useState([])
+  //const [formaciones, setFormaciones] = useState([])
+
+  useEffect(() => {
+    async function fetchUsuarios() {
+      try {
+        const data = await getUsuarios();
+        setUsuarios(data);
+      } catch (error) {
+        console.error('Error al cargar los usuarios:', error);
+      }
+    }
+    fetchUsuarios();
+
+    async function fetchEstudiantes() {
+      try {
+        const data = await getEstudiantes();
+        setEstudiantes(data);
+      } catch (error) {
+        console.error('Error al cargar los estudiantes:', error);
+      }
+    }
+    fetchEstudiantes();
+    /*
+    async function fetchFormaciones(){
+      try {
+        const data = await getFormaciones();
+        setFormaciones(data);
+      } catch (error) {
+        console.error('Error al cargar las formaciones:', error);
+      }
+    }
+    fetchFormaciones();
+    */
+  }, []);
 
   const handleFilterChange = (key, value, dataType) => {
     const newFilters = { ...filters, [key]: value }
@@ -182,11 +238,11 @@ export default function MainLayout() {
                 <TableRow>
                   <TableHead>RUT</TableHead>
                   <TableHead>Nombre</TableHead>
-                  <TableHead>Género</TableHead>
-                  <TableHead>Correo Electrónico</TableHead>
+                  <TableHead>Unidad</TableHead>
                   <TableHead>Carrera</TableHead>
+                  <TableHead>Correo Electrónico</TableHead>
+                  <TableHead>Sede</TableHead>
                   <TableHead>Egresado</TableHead>
-                  <TableHead>Facultad</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -194,12 +250,12 @@ export default function MainLayout() {
                 {estudiantes.map((estudiante) => (
                   <TableRow key={estudiante.rut}>
                     <TableCell>{estudiante.rut}</TableCell>
-                    <TableCell>{estudiante.nombre}</TableCell>
-                    <TableCell>{estudiante.genero}</TableCell>
-                    <TableCell>{estudiante.correo}</TableCell>
+                    <TableCell>{estudiante.nombreCompleto}</TableCell>
+                    <TableCell>{estudiante.unidad}</TableCell>
                     <TableCell>{estudiante.carrera}</TableCell>
+                    <TableCell>{estudiante.correo}</TableCell>
+                    <TableCell>{estudiante.sedeEstudiante}</TableCell>
                     <TableCell>{estudiante.egresado ? 'Sí' : 'No'}</TableCell>
-                    <TableCell>{estudiante.facultad}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
                         <Button variant="ghost" size="icon" onClick={() => handleView(estudiante, 'estudiante')}><Eye className="h-4 w-4" /></Button>
