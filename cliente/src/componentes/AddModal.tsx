@@ -198,7 +198,7 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
 
             <div className="space-y-2">
               <Label htmlFor="sedeEstudiante">Sede</Label>
-              <Select id="sedeEstudiante" name="sedeEstudiante" onValueChange={(value) => handleSelectChange("sedeEstudiante", value)}>
+              <Select name="sedeEstudiante" onValueChange={(value) => handleSelectChange("sedeEstudiante", value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sede del estudiante" />
                 </SelectTrigger>
@@ -211,7 +211,7 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
 
             <div className="space-y-2">
               <Label htmlFor="egresado">Egresado</Label>
-              <Select id="egresado" name="egresado" onValueChange={(value) => handleSelectChange("egresado", value)}>
+              <Select name="egresado" onValueChange={(value) => handleSelectChange("egresado", value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="¿El estudiante egresó?" />
                 </SelectTrigger>
