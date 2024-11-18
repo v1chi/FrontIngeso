@@ -321,6 +321,7 @@ export default function MainLayout() {
                   <TableHead>Tipo de Usuario</TableHead>
                   <TableHead>RUT</TableHead>
                   <TableHead>Nombre</TableHead>
+                  <TableHead>Correo</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -330,6 +331,7 @@ export default function MainLayout() {
                     <TableCell>{usuario.tipo}</TableCell>
                     <TableCell>{usuario.rut}</TableCell>
                     <TableCell>{usuario.nombre}</TableCell>
+                    <TableCell>{usuario.correo}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
                         <Button variant="ghost" size="icon" onClick={() => handleView(usuario, 'usuario')}><Eye className="h-4 w-4" /></Button>

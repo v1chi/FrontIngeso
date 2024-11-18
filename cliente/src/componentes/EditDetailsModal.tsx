@@ -15,7 +15,7 @@ interface EditDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   data: any;
-  type: "estudiante";
+  type: 'formacion' | 'estudiante' | 'usuario' | 'competencia';
   onSave: (data: any) => void;
 }
 
@@ -37,30 +37,45 @@ export default function EditDetailsModal({ isOpen, onClose, data, type, onSave }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     try {
-      // Preparar los datos a enviar
-      const updatedData = {
-        nombreCompleto: formData.nombreCompleto,
-        unidad: formData.unidad,
-        carrera: formData.carrera,
-        sedeEstudiante: formData.sedeEstudiante,
-        egresado: formData.egresado === "true", // Convertir a booleano
-      };
-
-      // URL del endpoint PATCH
-      const url = `http://localhost:3001/estudiantes/${formData.id}`;
+      let updatedData: Record<string, any> = {};
+      let endpoint = "";
+  
+      if (type === "estudiante") {
+        updatedData = {
+          nombreCompleto: formData.nombreCompleto,
+          unidad: formData.unidad,
+          carrera: formData.carrera,
+          sedeEstudiante: formData.sedeEstudiante,
+          egresado: formData.egresado === "true",
+        };
+        endpoint = "estudiantes";
+      } else if (type === "usuario") {
+        updatedData = {
+          rut: formData.rut,
+          nombre: formData.nombre,
+          correo: formData.correo,
+          clave: formData.clave,
+          tipo: formData.tipo,
+        };
+        endpoint = "usuarios";
+      } else {
+        throw new Error("Tipo de recurso no reconocido");
+      }
+  
+      // Construir la URL
+      const url = `http://localhost:3001/${endpoint}/${formData.id}`;
       console.log("URL utilizada:", url);
       console.log("Datos actualizados enviados:", updatedData);
-
-      // Realizar la solicitud PATCH
+  
       const response = await axios.patch(url, updatedData);
-      console.log("Estudiante actualizado con éxito:", response.data);
-
-      onSave(response.data); // Actualizar el estado en el padre
-      onClose();
+      console.log(`${type.charAt(0).toUpperCase() + type.slice(1)} actualizado con éxito:`, response.data);
+  
+      onSave(response.data);
+      window.location.reload();
     } catch (error) {
-      console.error("Error al actualizar estudiante:", error);
+      console.error(`Error al actualizar ${type}:`, error);
       alert("Hubo un error al guardar los cambios.");
     }
   };
@@ -143,6 +158,52 @@ export default function EditDetailsModal({ isOpen, onClose, data, type, onSave }
           </div>
         </form>
       );
+    } else if(type === "usuario"){
+      return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="rut">RUT</Label>
+            <Input id="rut" name="rut" value={formData.rut} onChange={handleInputChange} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="nombre">Nombre</Label>
+            <Input id="nombre" name="nombre" value={formData.nombre} onChange={handleInputChange} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="correo">Correo</Label>
+            <Input id="correo" name="correo" value={formData.correo} onChange={handleInputChange} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="clave">Clave</Label>
+            <Input id="clave" name="clave" value={formData.clave} onChange={handleInputChange} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="tipo">Tipo</Label>
+            <Select name="tipo" defaultValue={formData.tipo} onValueChange={(value) => handleSelectChange("tipo", value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Administrador">Administrador</SelectItem>
+                <SelectItem value="Usuario">Usuario</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="pt-4 flex justify-end space-x-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button type="submit">
+              Guardar Cambios
+            </Button>
+          </div>
+        </form>
+      )
     }
     return <p>Tipo de formulario no reconocido</p>;
   };
@@ -151,7 +212,9 @@ export default function EditDetailsModal({ isOpen, onClose, data, type, onSave }
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Editar Estudiante</DialogTitle>
+        <DialogTitle>
+            Editar {type.charAt(0).toUpperCase() + type.slice(1)}
+          </DialogTitle>
         </DialogHeader>
         <div className="mt-4">{renderForm()}</div>
       </DialogContent>

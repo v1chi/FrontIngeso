@@ -55,6 +55,7 @@ export default function ViewDetailsModal({ isOpen, onClose, data, type }: ViewDe
             <p><strong>Tipo:</strong> {data.tipo}</p>
             <p><strong>RUT:</strong> {data.rut}</p>
             <p><strong>Nombre:</strong> {data.nombre}</p>
+            <p><strong>Correo:</strong> {data.correo}</p>
           </div>
         )
       case 'competencia':
