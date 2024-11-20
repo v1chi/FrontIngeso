@@ -10,28 +10,11 @@ import ViewDetailsModal from '../componentes/ViewDetailsModal.tsx'
 import EditDetailsModal from '../componentes/EditDetailsModal.tsx'
 import { Input } from '../componentes/ui/input.tsx'
 
-/*
-async function getFormaciones() {
-  try {
-    const response = await axios.get('http://localhost:3001/formaciones');
-    return response.data;
-  } catch (error) {
-    console.error('Error al obtener las formaciones:', error);
-    return [];
-  }
-}
-*/
 // Mock data
 const formaciones = [
   { id: 1, sede: "Antofagasta", nombre: "Formación avanzada", modalidad: "Presencial", periodo: "2024-II", estado: "Abierta", relator: "Juan Pérez", fechaInicio: "2024-08-21", fechaTermino: "2024-09-15", aprobados: 15, reprobados: 3, desercion: 2, total: 20 },
   { id: 2, sede: "Antofagasta", nombre: "Formación inicial", modalidad: "Online", periodo: "2024-II", estado: "Cerrada", relator: "María González", fechaInicio: "2024-09-27", fechaTermino: "2024-10-08", aprobados: 18, reprobados: 1, desercion: 1, total: 20 },
   { id: 3, sede: "Coquimbo", nombre: "Formación especializada", modalidad: "B-Learning", periodo: "2025-I", estado: "Abierta", relator: "Carlos Rodríguez", fechaInicio: "2025-03-15", fechaTermino: "2025-04-30", aprobados: 12, reprobados: 2, desercion: 1, total: 15 },
-]
-const competencias = [
-  { codigo: "C1", nombre: "Construir estrategias pedagógicas", descripcion: "C1" },
-  { codigo: "C2", nombre: "Implementar el proceso de enseñanza aprendizaje", descripcion: "C2" },
-  { codigo: "C3", nombre: "Diseñar una estrategia de evaluación de logros de aprendizaje", descripcion: "C3" },
-  { codigo: "C4", nombre: "Manifestar una visión positiva sobre los estudiantes", descripcion: "C4" },
 ]
 
 const reporteParticipantes = [
@@ -51,6 +34,7 @@ export default function MainLayout() {
   const [modalType, setModalType] = useState('')
   const [usuarios, setUsuarios] = useState([])
   const [estudiantes, setEstudiantes] = useState([])
+  const [competencias, setCompetencias] = useState([]);
   //const [formaciones, setFormaciones] = useState([])
 
   async function fetchEstudiantes() {
@@ -73,20 +57,20 @@ export default function MainLayout() {
     }
   }
 
+  async function fetchCompetencias() {
+    try {
+      const response = await axios.get('http://localhost:3001/competencias');
+      setCompetencias(response.data);
+    } catch (error) {
+      console.error('Error al obtener las competencias:', error);
+      return [];
+    }
+  }
+
   useEffect(() => {
     fetchUsuarios();
     fetchEstudiantes();
-    /*
-    async function fetchFormaciones(){
-      try {
-        const data = await getFormaciones();
-        setFormaciones(data);
-      } catch (error) {
-        console.error('Error al cargar las formaciones:', error);
-      }
-    }
-    fetchFormaciones();
-    */
+    fetchCompetencias();
   }, []);
 
   const handleFilterChange = (key, value, dataType) => {

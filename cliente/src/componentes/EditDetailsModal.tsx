@@ -60,11 +60,17 @@ export default function EditDetailsModal({ isOpen, onClose, data, type, onSave }
           tipo: formData.tipo,
         };
         endpoint = "usuarios";
-      } else {
+      } else if (type === "competencia") {
+        updatedData = {
+          codigo: formData.codigo,
+          nombre: formData.nombre,
+          descripcion: formData.descripcion
+        };
+        endpoint = "competencias";
+      }else {
         throw new Error("Tipo de recurso no reconocido");
       }
   
-      // Construir la URL
       const url = `http://localhost:3001/${endpoint}/${formData.id}`;
       console.log("URL utilizada:", url);
       console.log("Datos actualizados enviados:", updatedData);
@@ -194,6 +200,34 @@ export default function EditDetailsModal({ isOpen, onClose, data, type, onSave }
             </Select>
           </div>
 
+          <div className="pt-4 flex justify-end space-x-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button type="submit">
+              Guardar Cambios
+            </Button>
+          </div>
+        </form>
+      )
+    } else if(type === "competencia"){
+      return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="codigo">Código</Label>
+            <Input id="codigo" name="codigo" value={formData.codigo} onChange={handleInputChange} />
+          </div>
+  
+          <div className="space-y-2">
+            <Label htmlFor="nombre">Nombre</Label>
+            <Input id="nombre" name="nombre" value={formData.nombre} onChange={handleInputChange} />
+          </div>
+  
+          <div className="space-y-2">
+            <Label htmlFor="descripcion">Descripción</Label>
+            <Input id="descripcion" name="descripcion" value={formData.descripcion} onChange={handleInputChange} />
+          </div>
+  
           <div className="pt-4 flex justify-end space-x-2">
             <Button variant="outline" onClick={onClose}>
               Cancelar

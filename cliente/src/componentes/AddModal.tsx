@@ -1,14 +1,14 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog.tsx"
-import { Button } from '../componentes/ui/button.tsx'
-import { Input } from '../componentes/ui/input.tsx'
-import { Label } from './ui/label.tsx'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select.tsx'
+} from "./ui/dialog.tsx";
+import { Button } from '../componentes/ui/button.tsx';
+import { Input } from '../componentes/ui/input.tsx';
+import { Label } from './ui/label.tsx';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select.tsx';
 import axios from 'axios';
 
 interface AddModalProps {
@@ -19,158 +19,110 @@ interface AddModalProps {
 }
 
 export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProps) {
-  const [formData, setFormData] = useState({
-    rut: '',
-    nombreCompleto: '',
-    unidad: '',
-    carrera: '',
-    correo: '',
-    sedeEstudiante: '',
-    egresado: false
-  })
+  const [formData, setFormData] = useState({});
+
+  useEffect(() => {
+    if (type === 'competencia') {
+      setFormData({ 
+        codigo: '', 
+        nombre: '', 
+        descripcion: '' 
+      });
+    } else if (type === 'estudiante') {
+      setFormData({
+        rut: '',
+        nombreCompleto: '',
+        unidad: '',
+        carrera: '',
+        correo: '',
+        sedeEstudiante: '',
+        egresado: false,
+      });
+    } else if (type === 'usuario') {
+      setFormData({ 
+        nombre: '', 
+        rut: '', 
+        correo: '', 
+        clave: '', 
+        tipo: '' 
+      });
+    } else if (type === 'formacion') {
+      setFormData({
+        sede: '',
+        nombre: '',
+        modalidad: '',
+        periodo: '',
+        relator: '',
+        fechaInicio: '',
+        fechaTermino: '',
+      });
+    }
+  }, [type]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-  async function addStudent(data): Promise<any> {
-
-    //Se ajusta el formData para coincidir los nombres entre DB-Front
-    const adjustedData = {
-      ...data,
-      nombreCompleto: data.nombre,
-      sedeEstudiante: data.sede
-    };
-
-    delete adjustedData.nombre;
-    delete adjustedData.sede;
-
+  async function addData(endpoint: string, data: any) {
     try {
-      console.log(`Datos recibidos: ${JSON.stringify(formData, null, 2)}`);
-      const response = await axios.post('http://localhost:3001/estudiantes', data, {
-          headers: {
-              'Content-Type': 'application/json',
-          },
+      const response = await axios.post(endpoint, data, {
+        headers: { 'Content-Type': 'application/json' },
       });
       console.log("Respuesta del servidor:", response.data);
     } catch (error) {
-        console.error("Error al agregar estudiante:", error);
+      console.error("Error al enviar datos:", error);
     }
-    
-    if (onSave) {
-      onSave(formData)
-    }
-    onClose()
-  }
-
-  async function addUser(data): Promise<any> {
-
-    try {
-      console.log(`Datos recibidos: ${JSON.stringify(formData, null, 2)}`);
-      const response = await axios.post('http://localhost:3001/usuarios', data, {
-          headers: {
-              'Content-Type': 'application/json',
-          },
-      });
-      console.log("Respuesta del servidor:", response.data);
-    } catch (error) {
-        console.error("Error al agregar estudiante:", error);
-    }
-    
-    if (onSave) {
-      onSave(formData)
-    }
-    onClose()
+    if (onSave) onSave(data);
+    onClose();
+    window.location.reload();
   }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (onSave) {
-      onSave(formData)
+    e.preventDefault();
+    if (type === 'competencia') {
+      addData('http://localhost:3001/competencias', formData);
+    } else if (type === 'estudiante') {
+      addData('http://localhost:3001/estudiantes', formData);
+    } else if (type === 'usuario') {
+      addData('http://localhost:3001/usuarios', formData);
+    } else if (type === 'formacion') {
+      addData('http://localhost:3001/formaciones', formData);
     }
-    onClose()
-  }
+  };
 
   const renderForm = () => {
     switch (type) {
-      case 'formacion':
+      case 'competencia':
         return (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="sede">Sede</Label>
-              <Select name="sede" onValueChange={(value) => handleSelectChange("sede", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar sede" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Antofagasta">Antofagasta</SelectItem>
-                  <SelectItem value="Coquimbo">Coquimbo</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="codigo">Código</Label>
+              <Input id="codigo" name="codigo" onChange={handleInputChange} />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="nombre">Nombre</Label>
               <Input id="nombre" name="nombre" onChange={handleInputChange} />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="modalidad">Modalidad</Label>
-              <Select name="modalidad" onValueChange={(value) => handleSelectChange("modalidad", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar modalidad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Presencial">Presencial</SelectItem>
-                  <SelectItem value="Online">Online</SelectItem>
-                  <SelectItem value="B-Learning">B-Learning</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="descripcion">Descripción</Label>
+              <Input id="descripcion" name="descripcion" onChange={handleInputChange} />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="periodo">Periodo</Label>
-              <Input id="periodo" name="periodo" onChange={handleInputChange} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="relator">Relator</Label>
-              <Input id="relator" name="relator" onChange={handleInputChange} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fechaInicio">Fecha de Inicio</Label>
-              <Input type="date" id="fechaInicio" name="fechaInicio" onChange={handleInputChange} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fechaTermino">Fecha de Término</Label>
-              <Input type="date" id="fechaTermino" name="fechaTermino" onChange={handleInputChange} />
-            </div>
-
             <div className="pt-4 flex justify-end space-x-2">
               <Button variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
-              <Button type="submit">
-                Agregar Formación
-              </Button>
+              <Button type="submit">Agregar Competencia</Button>
             </div>
           </form>
-        )
-
+        );
       case 'estudiante':
         return (
-          <form onSubmit = {(e) => {
-            e.preventDefault();
-            addStudent(formData);
-          }} className="space-y-4">
-
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="rut">RUT</Label>
               <Input id="rut" name="rut" onChange={handleInputChange} />
@@ -235,11 +187,7 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
 
       case 'usuario':
         return (
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            addUser(formData);
-          }} className="space-y-4">
-
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="nombre">Nombre</Label>
               <Input id="nombre" name="nombre" onChange={handleInputChange} />
@@ -282,41 +230,17 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
               </Button>
             </div>
           </form>
-        )
-
-      case 'competencia':
+        );
+      case 'formacion':
         return (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="codigo">Código</Label>
-              <Input id="codigo" name="codigo" onChange={handleInputChange} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="nombre">Nombre</Label>
-              <Input id="nombre" name="nombre" onChange={handleInputChange} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="descripcion">Descripción</Label>
-              <Input id="descripcion" name="descripcion" onChange={handleInputChange} />
-            </div>
-
-            <div className="pt-4 flex justify-end space-x-2">
-              <Button variant="outline" onClick={onClose}>
-                Cancelar
-              </Button>
-              <Button type="submit">
-                Agregar Competencia
-              </Button>
-            </div>
+            {/* Campos específicos para formación */}
           </form>
-        )
-
+        );
       default:
-        return <p>Tipo de formulario no reconocido</p>
+        return <p>Tipo de formulario no reconocido</p>;
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -326,10 +250,8 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
             Agregar {type.charAt(0).toUpperCase() + type.slice(1)}
           </DialogTitle>
         </DialogHeader>
-        <div className="mt-4">
-          {renderForm()}
-        </div>
+        <div className="mt-4">{renderForm()}</div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
