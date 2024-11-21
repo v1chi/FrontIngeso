@@ -69,7 +69,7 @@ export default function EditDetailsModal({ isOpen, onClose, data, type, onSave }
         endpoint = "competencias";
       } else if (type === "formacion") {
         updatedData = {
-          sede: formData.sede,
+          sedeFormacion: formData.sedeFormacion,
           nombre: formData.nombre,
           modalidad: formData.modalidad,
           semestre: formData.semestre,
@@ -254,8 +254,8 @@ export default function EditDetailsModal({ isOpen, onClose, data, type, onSave }
       return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="sede">Sede</Label>
-              <Select name="sede" defaultValue={formData.sede} onValueChange={(value) =>   handleSelectChange("sede", value)}>
+              <Label htmlFor="sedeFormacion">Sede</Label>
+              <Select name="sedeFormacion" defaultValue={formData.sede} onValueChange={(value) =>   handleSelectChange("sedeFormacion", value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar sede" />
                 </SelectTrigger>

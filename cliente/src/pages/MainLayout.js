@@ -10,13 +10,8 @@ import ViewDetailsModal from '../componentes/ViewDetailsModal.tsx'
 import EditDetailsModal from '../componentes/EditDetailsModal.tsx'
 import { Input } from '../componentes/ui/input.tsx'
 import { format } from 'date-fns';
+import * as XLSX from "xlsx";
 
-// Mock data
-const formaciones = [
-  { id: 1, sede: "Antofagasta", nombre: "Formación avanzada", modalidad: "Presencial", periodo: "2024-II", estado: "Abierta", relator: "Juan Pérez", fechaInicio: "2024-08-21", fechaTermino: "2024-09-15", aprobados: 15, reprobados: 3, desercion: 2, total: 20 },
-  { id: 2, sede: "Antofagasta", nombre: "Formación inicial", modalidad: "Online", periodo: "2024-II", estado: "Cerrada", relator: "María González", fechaInicio: "2024-09-27", fechaTermino: "2024-10-08", aprobados: 18, reprobados: 1, desercion: 1, total: 20 },
-  { id: 3, sede: "Coquimbo", nombre: "Formación especializada", modalidad: "B-Learning", periodo: "2025-I", estado: "Abierta", relator: "Carlos Rodríguez", fechaInicio: "2025-03-15", fechaTermino: "2025-04-30", aprobados: 12, reprobados: 2, desercion: 1, total: 15 },
-]
 
 const reporteParticipantes = [
   { rutEstudiante: "12345678-9", nombre: "Juan Pérez", correo: "juan.perez@example.com", carrera: "Ingeniería Civil", nombreFormacion: "Formación avanzada", periodo: "2024-II", estado: "Aprobado", fechaInicio: "2024-08-21", fechaTermino: "2024-09-15" },
@@ -37,12 +32,16 @@ export default function MainLayout() {
   const [usuarios, setUsuarios] = useState([])
   const [estudiantes, setEstudiantes] = useState([])
   const [competencias, setCompetencias] = useState([]);
+  const [selectedEstudiante, setSelectedEstudiante] = useState(null);
+  const [selectedFormacion, setSelectedFormacion] = useState(null);
+  
   
 
   async function fetchEstudiantes() {
     try {
       const response = await axios.get('http://localhost:3001/estudiantes');
       setEstudiantes(response.data);
+      setFilteredParticipantes(response.data);
     } catch (error) {
       console.error('Error al obtener los estudiantes:', error);
       return [];
@@ -73,11 +72,14 @@ export default function MainLayout() {
     try {
       const response = await axios.get('http://localhost:3001/formaciones');
       setFormaciones(response.data);
+      setFilteredFormaciones(response.data);
     } catch (error) {
       console.error('Error al obtener las formaciones:', error);
       return [];
     }
   }
+
+  
 
   useEffect(() => {
     fetchUsuarios();
@@ -85,6 +87,27 @@ export default function MainLayout() {
     fetchCompetencias();
     fetchFormaciones();
   }, []);
+
+  const handleAsociar = async () => {
+    if (!selectedEstudiante || !selectedFormacion) {
+      alert('Por favor, selecciona un estudiante y una formación.');
+      return;
+    }
+  
+    try {
+      const response = await axios.post('http://localhost:3001/estudiantes-formaciones', {
+        estudianteId: selectedEstudiante,
+        formacionId: selectedFormacion,
+        estado: 'en curso', // Puedes cambiar el estado inicial si lo deseas
+      });
+  
+      alert('Estudiante asociado exitosamente con la formación.');
+      console.log('Respuesta del servidor:', response.data);
+    } catch (error) {
+      console.error('Error al asociar el estudiante con la formación:', error);
+      alert('Hubo un error al realizar la asociación. Por favor, inténtalo de nuevo.');
+    }
+  };
 
   const handleFilterChange = (key, value, dataType) => {
     const newFilters = { ...filters, [key]: value }
@@ -98,19 +121,28 @@ export default function MainLayout() {
       )
       setFilteredFormaciones(filtered)
     } else if (dataType === 'participantes') {
-      const filtered = reporteParticipantes.filter(participante => 
+      const filtered = estudiantes.filter(estudiante => 
         Object.entries(newFilters).every(([k, v]) => 
-          v === '' || participante[k].toString().toLowerCase().includes(v.toLowerCase())
+          v === '' || estudiante[k].toString().toLowerCase().includes(v.toLowerCase())
         )
       )
       setFilteredParticipantes(filtered)
     }
   }
 
-  const exportToExcel = () => {
-    console.log("Exportando a Excel:", activeSection === 'reporte-formaciones' ? filteredFormaciones : filteredParticipantes)
-    alert("Exportación a Excel simulada. Ver consola para detalles.")
+  const exportToExcelFormaciones = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredFormaciones);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'ReporteFormaciones');
+    XLSX.writeFile(workbook, 'ReporteFormaciones.xlsx');
   }
+
+  const exportToExcelEstudiante = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredParticipantes);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'ReporteParticipantes');
+    XLSX.writeFile(workbook, 'ReporteParticipantes.xlsx');
+  };
 
   const handleAdd = (type) => {
     setModalType(type)
@@ -172,7 +204,7 @@ export default function MainLayout() {
                 {formaciones.map((formacion) => (
                   <TableRow key={formacion.id}>
                     <TableCell>{formacion.id}</TableCell>
-                    <TableCell>{formacion.sede}</TableCell>
+                    <TableCell>{formacion.sedeFormacion}</TableCell>
                     <TableCell>{formacion.nombre}</TableCell>
                     <TableCell>{formacion.modalidad}</TableCell>
                     <TableCell>{formacion.semestre}</TableCell>
@@ -250,61 +282,52 @@ export default function MainLayout() {
             </Table>
           </div>
         )
-      case 'asociar':
-        return (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Asociar Estudiante con Formación</h2>
-            <div className="grid grid-cols-4 gap-4">
-              <div>
-                <label className="block mb-2">RUT del Estudiante</label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar estudiante" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {estudiantes.map((estudiante) => (
-                      <SelectItem key={estudiante.rut} value={estudiante.rut}>
-                        {estudiante.rut} - {estudiante.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        case 'asociar':
+          return (
+            <div>
+              <h2 className="text-2xl font-bold mb-4">Asociar Estudiante con Formación</h2>
+              <div className="grid grid-cols-2 gap-4">
+                {/* Seleccionar estudiante por RUT */}
+                <div>
+                  <label className="block mb-2">RUT del Estudiante</label>
+                  <Select onValueChange={(value) => setSelectedEstudiante(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar estudiante" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {estudiantes.map((estudiante) => (
+                        <SelectItem key={estudiante.rut} value={estudiante.id}>
+                          {estudiante.rut} - {estudiante.nombreCompleto}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+        
+                {/* Seleccionar formación por ID */}
+                <div>
+                  <label className="block mb-2">ID de la Formación</label>
+                  <Select onValueChange={(value) => setSelectedFormacion(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar formación" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {formaciones.map((formacion) => (
+                        <SelectItem key={formacion.id} value={formacion.id}>
+                          {formacion.id} - {formacion.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div>
-                <label className="block mb-2">Nombre de la Formación</label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar formación" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {formaciones.map((formacion) => (
-                      <SelectItem key={formacion.id} value={formacion.id.toString()}>
-                        {formacion.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="block mb-2">Semestre</label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar semestre" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="I">I</SelectItem>
-                    <SelectItem value="II">II</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="block mb-2">Año</label>
-                <Input type="number" placeholder="Ingrese el año" />
-              </div>
+        
+              {/* Botón para asociar */}
+              <Button className="mt-4" onClick={handleAsociar}>
+                Asociar
+              </Button>
             </div>
-            <Button className="mt-4">Asociar</Button>
-          </div>
-        )
+          )
       case 'usuarios':
         return (
           <div>
@@ -377,122 +400,165 @@ export default function MainLayout() {
             </Table>
           </div>
         )
-      case 'reporte-formaciones':
-        return (
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Reporte de Formaciones</h2>
-              <Button onClick={exportToExcel}>
-                <Download className="mr-2 h-4 w-4" />
-                Exportar a Excel
-              </Button>
-            </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {['Id', 'Sede', 'Nombre', 'Modalidad', 'Periodo', 'Estado', 'Relator', 'Fecha de Inicio', 'Fecha de Término', 'Aprobados', 'Reprobados', 'Deserción', 'Total'].map((header, index) => (
-                    <TableHead key={index}>
-                      <div className="flex items-center">
-                        {header}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0 ml-2">
-                              <Filter className="h-4 w-4" />
-                              <span className="sr-only">Filtrar {header}</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <Input
-                              placeholder={`Filtrar ${header}`}
-                              value={filters[header.toLowerCase()] || ''}
-                              onChange={(e) => handleFilterChange(header.toLowerCase(), e.target.value, 'formaciones')}
-                              className="px-3 py-2"
-                            />
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredFormaciones.map((formacion) => (
-                  <TableRow key={formacion.id}>
-                    <TableCell>{formacion.id}</TableCell>
-                    <TableCell>{formacion.sede}</TableCell>
-                    <TableCell>{formacion.nombre}</TableCell>
-                    <TableCell>{formacion.modalidad}</TableCell>
-                    <TableCell>{formacion.periodo}</TableCell>
-                    <TableCell>{formacion.estado}</TableCell>
-                    <TableCell>{formacion.relator}</TableCell>
-                    <TableCell>{formacion.fechaInicio}</TableCell>
-                    <TableCell>{formacion.fechaTermino}</TableCell>
-                    <TableCell>{formacion.aprobados}</TableCell>
-                    <TableCell>{formacion.reprobados}</TableCell>
-                    <TableCell>{formacion.desercion}</TableCell>
-                    <TableCell>{formacion.total}</TableCell>
+        case 'reporte-formaciones':
+          return (
+            <div>
+              {/* Encabezado con título y botón de exportar */}
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">Reporte de Formaciones</h2>
+                <Button onClick={exportToExcelFormaciones}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Exportar a Excel
+                </Button>
+              </div>
+        
+              {/* Tabla con encabezados y filtros */}
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {[
+                      { key: 'semestre', label: 'Semestre' },
+                      { key: 'nombre', label: 'Nombre' },
+                      { key: 'modalidad', label: 'Modalidad' },
+                      { key: 'profesorRelator', label: 'Relator' },
+                      { key: 'estado', label: 'Estado' },
+                    ].map((column, index) => (
+                      <TableHead key={index}>
+                        <div className="flex items-center space-x-2">
+                          <span>{column.label}</span>
+                          {/* Filtro */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-5 w-5 p-0">
+                                <Filter className="h-4 w-4" />
+                                <span className="sr-only">Filtrar {column.label}</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <Input
+                                placeholder={`Filtrar ${column.label}`}
+                                value={filters[column.key] || ''}
+                                onChange={(e) =>
+                                  handleFilterChange(column.key, e.target.value, 'formaciones')
+                                }
+                                className="px-3 py-2"
+                              />
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableHead>
+                    ))}
+                    <TableHead>Id</TableHead>
+                    <TableHead>Sede</TableHead>
+                    <TableHead>Periodo</TableHead>
+                    <TableHead>Fecha de Inicio</TableHead>
+                    <TableHead>Fecha de Término</TableHead>
+                    <TableHead>Aprobados</TableHead>
+                    <TableHead>Reprobados</TableHead>
+                    <TableHead>Deserción</TableHead>
+                    <TableHead>Total</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )
-      case 'reporte-participantes':
-        return (
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Reporte de Participantes</h2>
-              <Button onClick={exportToExcel}>
-                <Download className="mr-2 h-4 w-4" />
-                Exportar a Excel
-              </Button>
-            </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {['RUT Estudiante', 'Nombre', 'Correo', 'Carrera', 'Nombre Formación', 'Periodo', 'Estado', 'Fecha de Inicio', 'Fecha de Término'].map((header, index) => (
-                    <TableHead key={index}>
-                      <div className="flex items-center">
-                        {header}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0 ml-2">
-                              <Filter className="h-4 w-4" />
-                              <span className="sr-only">Filtrar {header}</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <Input
-                              placeholder={`Filtrar ${header}`}
-                              value={filters[header.toLowerCase().replace(/ /g, '_')] || ''}
-                              onChange={(e) => handleFilterChange(header.toLowerCase().replace(/ /g, '_'), e.target.value, 'participantes')}
-                              className="px-3 py-2"
-                            />
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </TableHead>
+                </TableHeader>
+        
+                {/* Cuerpo de la tabla */}
+                <TableBody>
+                  {filteredFormaciones.map((formacion) => (
+                    <TableRow key={formacion.id}>
+                      <TableCell>{formacion.semestre}</TableCell>
+                      <TableCell>{formacion.nombre}</TableCell>
+                      <TableCell>{formacion.modalidad}</TableCell>
+                      <TableCell>{formacion.profesorRelator}</TableCell>
+                      <TableCell>{formacion.estado}</TableCell>
+                      <TableCell>{formacion.id}</TableCell>
+                      <TableCell>{formacion.sedeFormacion}</TableCell>
+                      <TableCell>{formacion.semestre}</TableCell>
+                      <TableCell>{new Date(formacion.fechaInicio).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(formacion.fechaTermino).toLocaleDateString()}</TableCell>
+                      <TableCell>{formacion.aprobados}</TableCell>
+                      <TableCell>{formacion.reprobados}</TableCell>
+                      <TableCell>{formacion.desercion}</TableCell>
+                      <TableCell>{formacion.total}</TableCell>
+                    </TableRow>
                   ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredParticipantes.map((participante, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{participante.rutEstudiante}</TableCell>
-                    <TableCell>{participante.nombre}</TableCell>
-                    <TableCell>{participante.correo}</TableCell>
-                    <TableCell>{participante.carrera}</TableCell>
-                    <TableCell>{participante.nombreFormacion}</TableCell>
-                    <TableCell>{participante.periodo}</TableCell>
-                    <TableCell>{participante.estado}</TableCell>
-                    <TableCell>{participante.fechaInicio}</TableCell>
-                    <TableCell>{participante.fechaTermino}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )
+                </TableBody>
+              </Table>
+            </div>
+          )
+          case 'reporte-participantes':
+            return (
+              <div>
+                {/* Encabezado con el título y el botón de exportar */}
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-bold">Reporte de Participantes</h2>
+                  <Button onClick={exportToExcelEstudiante}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Exportar a Excel
+                  </Button>
+                </div>
+          
+                {/* Tabla con encabezados y filtros */}
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {[
+                        { key: 'rut', label: 'RUT' },
+                        { key: 'carrera', label: 'Carrera' },
+                        { key: 'semestre', label: 'Semestre' }, // Mapeado como periodo
+                      ].map((column, index) => (
+                        <TableHead key={index}>
+                          <div className="flex items-center space-x-2">
+                            <span>{column.label}</span>
+                            {/* Filtro */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-5 w-5 p-0">
+                                  <Filter className="h-4 w-4" />
+                                  <span className="sr-only">Filtrar {column.label}</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <Input
+                                  placeholder={`Filtrar ${column.label}`}
+                                  value={filters[column.key] || ''}
+                                  onChange={(e) =>
+                                    handleFilterChange(column.key, e.target.value, 'participantes')
+                                  }
+                                  className="px-3 py-2"
+                                />
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableHead>
+                      ))}
+                      {/* Agregamos el resto de las columnas sin filtros */}
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Correo</TableHead>
+                      <TableHead>Nombre Formación</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Fecha de Inicio</TableHead>
+                      <TableHead>Fecha de Término</TableHead>
+                    </TableRow>
+                  </TableHeader>
+          
+                  {/* Cuerpo de la tabla */}
+                  <TableBody>
+                    {filteredParticipantes.map((participante, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{participante.rut}</TableCell>
+                        <TableCell>{participante.carrera}</TableCell>
+                        <TableCell>{participante.semestre}</TableCell>
+                        <TableCell>{participante.nombreCompleto}</TableCell>
+                        <TableCell>{participante.correo}</TableCell>
+                        <TableCell>{participante.nombreFormacion}</TableCell>
+                        <TableCell>{participante.estado}</TableCell>
+                        <TableCell>{new Date(participante.fechaInicio).toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(participante.fechaTermino).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            );
       default:
         return <h2 className="text-2xl font-bold">Bienvenido a la Escuela de Ayudantes y Tutores</h2>
     }

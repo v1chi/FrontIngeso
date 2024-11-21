@@ -57,7 +57,7 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
       });
     } else if (type === 'formacion') {
       setFormData({
-        sede: "",
+        sedeFormacion: "",
         nombre: "",
         modalidad: "",
         semestre: "",
@@ -273,8 +273,8 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
         return (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="sede">Sede</Label>
-              <Select name="sede" onValueChange={(value) => handleSelectChange("sede", value)}>
+              <Label htmlFor="sedeFormacion">Sede</Label>
+              <Select name="sedeFormacion" onValueChange={(value) => handleSelectChange("sedeFormacion", value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar sede" />
                 </SelectTrigger>
