@@ -238,6 +238,71 @@ export default function EditDetailsModal({ isOpen, onClose, data, type, onSave }
           </div>
         </form>
       )
+    } else if (type === "formacion"){
+      return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="sede">Sede</Label>
+              <Select name="sede" defaultValue={formData.sede} onValueChange={(value) =>   handleSelectChange("sede", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar sede" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Antofagasta">Antofagasta</SelectItem>
+                  <SelectItem value="Coquimbo">Coquimbo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="nombre">Nombre</Label>
+              <Input id="nombre" name="nombre" value={formData.nombre} onChange={handleInputChange} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="modalidad">Modalidad</Label>
+              <Select name="modalidad" defaultValue={formData.modalidad} onValueChange={(value) => handleSelectChange("modalidad", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar modalidad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Presencial">Presencial</SelectItem>
+                  <SelectItem value="Online">Online</SelectItem>
+                  <SelectItem value="B-Learning">B-Learning</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="periodo">Periodo</Label>
+              <Input id="periodo" name="periodo" value={formData.periodo} onChange={handleInputChange} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="relator">Relator</Label>
+              <Input id="relator" name="relator" value={formData.relator} onChange={handleInputChange} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fechaInicio">Fecha de Inicio</Label>
+              <Input type="date" id="fechaInicio" name="fechaInicio" value={formData.fechaInicio} onChange={handleInputChange} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fechaTermino">Fecha de Término</Label>
+              <Input type="date" id="fechaTermino" name="fechaTermino" value={formData.fechaTermino} onChange={handleInputChange} />
+            </div>
+
+            <div className="pt-4 flex justify-end space-x-2">
+              <Button variant="outline" onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button type="submit">
+                Guardar Cambios
+              </Button>
+            </div>
+          </form>
+        )
     }
     return <p>Tipo de formulario no reconocido</p>;
   };

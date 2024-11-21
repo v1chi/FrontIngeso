@@ -234,9 +234,68 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
       case 'formacion':
         return (
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Campos específicos para formación */}
+            <div className="space-y-2">
+              <Label htmlFor="sede">Sede</Label>
+              <Select name="sede" onValueChange={(value) => handleSelectChange("sede", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar sede" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Antofagasta">Antofagasta</SelectItem>
+                  <SelectItem value="Coquimbo">Coquimbo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="nombre">Nombre</Label>
+              <Input id="nombre" name="nombre" onChange={handleInputChange} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="modalidad">Modalidad</Label>
+              <Select name="modalidad" onValueChange={(value) => handleSelectChange("modalidad", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar modalidad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Presencial">Presencial</SelectItem>
+                  <SelectItem value="Online">Online</SelectItem>
+                  <SelectItem value="B-Learning">B-Learning</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="periodo">Periodo</Label>
+              <Input id="periodo" name="periodo" onChange={handleInputChange} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="relator">Relator</Label>
+              <Input id="relator" name="relator" onChange={handleInputChange} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fechaInicio">Fecha de Inicio</Label>
+              <Input type="date" id="fechaInicio" name="fechaInicio" onChange={handleInputChange} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fechaTermino">Fecha de Término</Label>
+              <Input type="date" id="fechaTermino" name="fechaTermino" onChange={handleInputChange} />
+            </div>
+
+            <div className="pt-4 flex justify-end space-x-2">
+              <Button variant="outline" onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button type="submit">
+                Agregar Formación
+              </Button>
+            </div>
           </form>
-        );
+        )
       default:
         return <p>Tipo de formulario no reconocido</p>;
     }
