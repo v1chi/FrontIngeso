@@ -9,6 +9,7 @@ import AddModal from '../componentes/AddModal.tsx'
 import ViewDetailsModal from '../componentes/ViewDetailsModal.tsx'
 import EditDetailsModal from '../componentes/EditDetailsModal.tsx'
 import { Input } from '../componentes/ui/input.tsx'
+import { format } from 'date-fns';
 
 // Mock data
 const formaciones = [
@@ -24,6 +25,7 @@ const reporteParticipantes = [
 
 export default function MainLayout() {
   const [activeSection, setActiveSection] = useState('home')
+  const [formaciones, setFormaciones] = useState([])
   const [filteredFormaciones, setFilteredFormaciones] = useState(formaciones)
   const [filteredParticipantes, setFilteredParticipantes] = useState(reporteParticipantes)
   const [filters, setFilters] = useState({})
@@ -35,7 +37,7 @@ export default function MainLayout() {
   const [usuarios, setUsuarios] = useState([])
   const [estudiantes, setEstudiantes] = useState([])
   const [competencias, setCompetencias] = useState([]);
-  const [formaciones, setFormaciones] = useState([])
+  
 
   async function fetchEstudiantes() {
     try {
@@ -154,7 +156,7 @@ export default function MainLayout() {
                   <TableHead>Sede</TableHead>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Modalidad</TableHead>
-                  <TableHead>Periodo</TableHead>
+                  <TableHead>Semestre</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead>Relator</TableHead>
                   <TableHead>Fecha de Inicio</TableHead>
@@ -173,11 +175,11 @@ export default function MainLayout() {
                     <TableCell>{formacion.sede}</TableCell>
                     <TableCell>{formacion.nombre}</TableCell>
                     <TableCell>{formacion.modalidad}</TableCell>
-                    <TableCell>{formacion.periodo}</TableCell>
+                    <TableCell>{formacion.semestre}</TableCell>
                     <TableCell>{formacion.estado}</TableCell>
-                    <TableCell>{formacion.relator}</TableCell>
-                    <TableCell>{formacion.fechaInicio}</TableCell>
-                    <TableCell>{formacion.fechaTermino}</TableCell>
+                    <TableCell>{formacion.profesorRelator}</TableCell>
+                    <TableCell>{format(new Date(formacion.fechaInicio), 'yyyy-MM-dd')}</TableCell>
+                    <TableCell>{format(new Date(formacion.fechaTermino), 'yyyy-MM-dd')}</TableCell>
                     <TableCell>{formacion.aprobados}</TableCell>
                     <TableCell>{formacion.reprobados}</TableCell>
                     <TableCell>{formacion.desercion}</TableCell>
