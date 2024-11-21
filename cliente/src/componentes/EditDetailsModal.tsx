@@ -67,7 +67,18 @@ export default function EditDetailsModal({ isOpen, onClose, data, type, onSave }
           descripcion: formData.descripcion
         };
         endpoint = "competencias";
-      }else {
+      } else if (type === "formacion") {
+        updatedData = {
+          sede: formData.sede,
+          nombre: formData.nombre,
+          modalidad: formData.modalidad,
+          periodo: formData.periodo,
+          relator: formData.relator,
+          fechaInicio: formData.fechaInicio,
+          fechaTermino: formData.fechaTermino
+        };
+        endpoint = "formaciones";
+      } else {
         throw new Error("Tipo de recurso no reconocido");
       }
   

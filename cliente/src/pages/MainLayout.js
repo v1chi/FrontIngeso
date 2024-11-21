@@ -35,7 +35,7 @@ export default function MainLayout() {
   const [usuarios, setUsuarios] = useState([])
   const [estudiantes, setEstudiantes] = useState([])
   const [competencias, setCompetencias] = useState([]);
-  //const [formaciones, setFormaciones] = useState([])
+  const [formaciones, setFormaciones] = useState([])
 
   async function fetchEstudiantes() {
     try {
@@ -67,10 +67,21 @@ export default function MainLayout() {
     }
   }
 
+  async function fetchFormaciones() {
+    try {
+      const response = await axios.get('http://localhost:3001/formaciones');
+      setFormaciones(response.data);
+    } catch (error) {
+      console.error('Error al obtener las formaciones:', error);
+      return [];
+    }
+  }
+
   useEffect(() => {
     fetchUsuarios();
     fetchEstudiantes();
     fetchCompetencias();
+    fetchFormaciones();
   }, []);
 
   const handleFilterChange = (key, value, dataType) => {
