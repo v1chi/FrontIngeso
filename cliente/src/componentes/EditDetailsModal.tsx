@@ -72,10 +72,11 @@ export default function EditDetailsModal({ isOpen, onClose, data, type, onSave }
           sede: formData.sede,
           nombre: formData.nombre,
           modalidad: formData.modalidad,
-          periodo: formData.periodo,
-          relator: formData.relator,
+          semestre: formData.semestre,
+          profesorRelator: formData.profesorRelator,
           fechaInicio: formData.fechaInicio,
-          fechaTermino: formData.fechaTermino
+          fechaTermino: formData.fechaTermino,
+          competencias: formData.competencias.map((c: any) => c.id), // Aquí agregamos las competencias como IDs
         };
         endpoint = "formaciones";
       } else {
@@ -285,13 +286,13 @@ export default function EditDetailsModal({ isOpen, onClose, data, type, onSave }
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="periodo">Periodo</Label>
-              <Input id="periodo" name="periodo" value={formData.periodo} onChange={handleInputChange} />
+              <Label htmlFor="semestre">Periodo</Label>
+              <Input id="semestre" name="semestre" value={formData.periodo} onChange={handleInputChange} />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="relator">Relator</Label>
-              <Input id="relator" name="relator" value={formData.relator} onChange={handleInputChange} />
+              <Label htmlFor="profesorRelator">Relator</Label>
+              <Input id="profesorRelator" name="profesorRelator" value={formData.relator} onChange={handleInputChange} />
             </div>
 
             <div className="space-y-2">

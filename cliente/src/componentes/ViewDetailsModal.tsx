@@ -26,15 +26,25 @@ export default function ViewDetailsModal({ isOpen, onClose, data, type }: ViewDe
             <p><strong>Sede:</strong> {data.sede}</p>
             <p><strong>Nombre:</strong> {data.nombre}</p>
             <p><strong>Modalidad:</strong> {data.modalidad}</p>
-            <p><strong>Periodo:</strong> {data.periodo}</p>
+            <p><strong>Periodo:</strong> {data.semestre}</p>
             <p><strong>Estado:</strong> {data.estado}</p>
-            <p><strong>Relator:</strong> {data.relator}</p>
-            <p><strong>Fecha de Inicio:</strong> {data.fechaInicio}</p>
-            <p><strong>Fecha de Término:</strong> {data.fechaTermino}</p>
+            <p><strong>Relator:</strong> {data.profesorRelator}</p>
+            <p><strong>Fecha de Inicio:</strong> {new Date(data.fechaInicio).toLocaleDateString()}</p>
+            <p><strong>Fecha de Término:</strong> {new Date(data.fechaTermino).toLocaleDateString()}</p>
             <p><strong>Aprobados:</strong> {data.aprobados}</p>
             <p><strong>Reprobados:</strong> {data.reprobados}</p>
             <p><strong>Deserción:</strong> {data.desercion}</p>
             <p><strong>Total:</strong> {data.total}</p>
+            <p><strong>Competencias:</strong></p>
+            <ul>
+              {data.competencias && data.competencias.length > 0 ? (
+                data.competencias.map((comp: any, index: number) => (
+                  <li key={index}>{comp.nombre}</li>
+                ))
+              ) : (
+                <p>No hay competencias asociadas</p>
+              )}
+            </ul>
           </div>
         )
       case 'estudiante':
@@ -73,7 +83,7 @@ export default function ViewDetailsModal({ isOpen, onClose, data, type }: ViewDe
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
           <DialogTitle>
             Detalles de {type.charAt(0).toUpperCase() + type.slice(1)}
