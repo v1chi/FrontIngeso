@@ -34,6 +34,7 @@ export default function MainLayout() {
   const [competencias, setCompetencias] = useState([]);
   const [selectedEstudiante, setSelectedEstudiante] = useState(null);
   const [selectedFormacion, setSelectedFormacion] = useState(null);
+  const [participantes, setParticipantes] = useState([]);
   
   
 
@@ -79,6 +80,15 @@ export default function MainLayout() {
     }
   }
 
+  async function fetchParticipantes() {
+    try {
+      const response = await axios.get('http://localhost:3001/estudiantes-formaciones');
+      setParticipantes(response.data);
+      setFilteredParticipantes(response.data); // Por defecto, mostrar todos los datos
+    } catch (error) {
+      console.error('Error al obtener los participantes:', error);
+    }
+  }
   
 
   useEffect(() => {
@@ -86,6 +96,7 @@ export default function MainLayout() {
     fetchEstudiantes();
     fetchCompetencias();
     fetchFormaciones();
+    fetchParticipantes();
   }, []);
 
   const handleAsociar = async () => {
@@ -121,12 +132,35 @@ export default function MainLayout() {
       )
       setFilteredFormaciones(filtered)
     } else if (dataType === 'participantes') {
-      const filtered = estudiantes.filter(estudiante => 
-        Object.entries(newFilters).every(([k, v]) => 
-          v === '' || estudiante[k].toString().toLowerCase().includes(v.toLowerCase())
-        )
-      )
-      setFilteredParticipantes(filtered)
+      const filtered = participantes.filter((participante) => {
+        const { estudiante, formacion } = participante;
+  
+        return Object.entries(newFilters).every(([k, v]) => {
+          if (v === "") return true;
+  
+          // Filtrar por campos de estudiante
+          if (k.startsWith("estudiante.") && estudiante) {
+            const field = k.replace("estudiante.", "");
+            return (
+              estudiante[field] &&
+              estudiante[field].toString().toLowerCase().includes(v.toLowerCase())
+            );
+          }
+  
+          // Filtrar por campos de formacion
+          if (k.startsWith("formacion.") && formacion) {
+            const field = k.replace("formacion.", "");
+            return (
+              formacion[field] &&
+              formacion[field].toString().toLowerCase().includes(v.toLowerCase())
+            );
+          }
+  
+          return false;
+        });
+      });
+  
+      setFilteredParticipantes(filtered);
     }
   }
 
@@ -487,7 +521,7 @@ export default function MainLayout() {
           case 'reporte-participantes':
             return (
               <div>
-                {/* Encabezado con el título y el botón de exportar */}
+                {/* Encabezado con título y botón de exportar */}
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-2xl font-bold">Reporte de Participantes</h2>
                   <Button onClick={exportToExcelEstudiante}>
@@ -495,34 +529,37 @@ export default function MainLayout() {
                     Exportar a Excel
                   </Button>
                 </div>
-          
+
                 {/* Tabla con encabezados y filtros */}
                 <Table>
                   <TableHeader>
                     <TableRow>
                       {[
-                        { key: 'rut', label: 'RUT' },
-                        { key: 'carrera', label: 'Carrera' },
-                        { key: 'semestre', label: 'Semestre' }, // Mapeado como periodo
-                      ].map((column, index) => (
-                        <TableHead key={index}>
-                          <div className="flex items-center space-x-2">
-                            <span>{column.label}</span>
-                            {/* Filtro */}
+                        { header: "RUT", key: "estudiante.rut" },
+                        { header: "Carrera", key: "estudiante.carrera" },
+                        { header: "Semestre", key: "formacion.semestre" },
+                        { header: "Nombre", key: "estudiante.nombreCompleto" },
+                        { header: "Correo", key: "estudiante.correo" },
+                        { header: "Nombre Formación", key: "formacion.nombre" },
+                        { header: "Estado", key: "estado" },
+                        { header: "Fecha de Inicio", key: "formacion.fechaInicio" },
+                        { header: "Fecha de Término", key: "formacion.fechaTermino" },
+                      ].map(({ header, key }) => (
+                        <TableHead key={key}>
+                          <div className="flex items-center">
+                            {header}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-5 w-5 p-0">
+                                <Button variant="ghost" className="h-8 w-8 p-0 ml-2">
                                   <Filter className="h-4 w-4" />
-                                  <span className="sr-only">Filtrar {column.label}</span>
+                                  <span className="sr-only">Filtrar {header}</span>
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <Input
-                                  placeholder={`Filtrar ${column.label}`}
-                                  value={filters[column.key] || ''}
-                                  onChange={(e) =>
-                                    handleFilterChange(column.key, e.target.value, 'participantes')
-                                  }
+                                  placeholder={`Filtrar ${header}`}
+                                  value={filters[key] || ""}
+                                  onChange={(e) => handleFilterChange(key, e.target.value, "participantes")}
                                   className="px-3 py-2"
                                 />
                               </DropdownMenuContent>
@@ -530,35 +567,45 @@ export default function MainLayout() {
                           </div>
                         </TableHead>
                       ))}
-                      {/* Agregamos el resto de las columnas sin filtros */}
-                      <TableHead>Nombre</TableHead>
-                      <TableHead>Correo</TableHead>
-                      <TableHead>Nombre Formación</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead>Fecha de Inicio</TableHead>
-                      <TableHead>Fecha de Término</TableHead>
                     </TableRow>
                   </TableHeader>
-          
+
                   {/* Cuerpo de la tabla */}
                   <TableBody>
-                    {filteredParticipantes.map((participante, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{participante.rut}</TableCell>
-                        <TableCell>{participante.carrera}</TableCell>
-                        <TableCell>{participante.semestre}</TableCell>
-                        <TableCell>{participante.nombreCompleto}</TableCell>
-                        <TableCell>{participante.correo}</TableCell>
-                        <TableCell>{participante.nombreFormacion}</TableCell>
-                        <TableCell>{participante.estado}</TableCell>
-                        <TableCell>{new Date(participante.fechaInicio).toLocaleDateString()}</TableCell>
-                        <TableCell>{new Date(participante.fechaTermino).toLocaleDateString()}</TableCell>
-                      </TableRow>
-                    ))}
+                    {filteredParticipantes.map((participante, index) => {
+                      const { estudiante, formacion, estado } = participante;
+
+                      if (!estudiante || !formacion) {
+                        console.error("Datos incompletos:", participante);
+                        return null;
+                      }
+
+                      return (
+                        <TableRow key={index}>
+                          <TableCell>{estudiante.rut}</TableCell>
+                          <TableCell>{estudiante.carrera}</TableCell>
+                          <TableCell>{formacion.semestre}</TableCell>
+                          <TableCell>{estudiante.nombreCompleto}</TableCell>
+                          <TableCell>{estudiante.correo}</TableCell>
+                          <TableCell>{formacion.nombre}</TableCell>
+                          <TableCell>{estado}</TableCell>
+                          <TableCell>
+                            {formacion.fechaInicio
+                              ? new Date(formacion.fechaInicio).toLocaleDateString()
+                              : "Sin fecha"}
+                          </TableCell>
+                          <TableCell>
+                            {formacion.fechaTermino
+                              ? new Date(formacion.fechaTermino).toLocaleDateString()
+                              : "Sin fecha"}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
-            );
+            )
       default:
         return <h2 className="text-2xl font-bold">Bienvenido a la Escuela de Ayudantes y Tutores</h2>
     }
