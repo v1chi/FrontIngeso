@@ -35,6 +35,9 @@ export default function MainLayout() {
   const [selectedEstudiante, setSelectedEstudiante] = useState(null);
   const [selectedFormacion, setSelectedFormacion] = useState(null);
   const [participantes, setParticipantes] = useState([]);
+  const [activeView, setActiveView] = useState(null); // Vista activa: asistencias, participantes, constancias
+  const [activeData, setActiveData] = useState([]); // Datos dinámicos de la vista activa
+  
   
   
 
@@ -206,6 +209,142 @@ export default function MainLayout() {
     setIsEditModalOpen(false)
   }
 
+  const handleViewAsistencias = async (formacion) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/asistencias?formacionId=${formacion.id}`);
+      console.log('Asistencias:', response.data);
+      setActiveData(response.data || []); // Guardar las asistencias
+      setSelectedFormacion(formacion); // Guardar la formación seleccionada
+      setActiveView('asistencias'); // Cambiar a la vista de asistencias
+    } catch (error) {
+      console.error('Error al cargar las asistencias:', error);
+      alert('No se pudieron cargar las asistencias.');
+    }
+  };
+  
+  const handleViewParticipantes = async (formacion) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/estudiantes-formaciones?formacionId=${formacion.id}`);
+      console.log('Participantes:', response.data);
+      setActiveData(response.data || []); // Guardar los participantes
+      setSelectedFormacion(formacion); // Guardar la formación seleccionada
+      setActiveView('participantesFormacion'); // Cambiar a la vista de participantes
+    } catch (error) {
+      console.error('Error al cargar los participantes:', error);
+      alert('No se pudieron cargar los participantes.');
+    }
+  };
+  
+
+  const handleViewConstancias = async (formacion) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/formaciones/${formacion.id}/constancias`);
+      setActiveData(response.data); // Guardar constancias
+      setSelectedFormacion(formacion); // Guardar formación seleccionada
+      setActiveView('constancias'); // Activar vista de constancias
+    } catch (error) {
+      console.error('Error al obtener las constancias:', error);
+    }
+  };
+
+  const handleCloseFormacion = async (formacionId) => {
+    try {
+      // Solicitar al backend que cierre la formación
+      const response = await axios.patch(`http://localhost:3001/formaciones/${formacionId}`, {
+        estado: 'cerrada',
+      });
+  
+      // Opcional: Actualizar estadísticas locales
+      const updatedFormaciones = formaciones.map((formacion) =>
+        formacion.id === formacionId ? { ...formacion, estado: 'cerrada' } : formacion
+      );
+      setFormaciones(updatedFormaciones);
+  
+      // Generar constancias para los aprobados
+      //await axios.post(`http://localhost:3001/formaciones/${formacionId}/constancias`);
+  
+      alert(`La formación con ID ${formacionId} ha sido cerrada y las constancias se han generado.`);
+      fetchFormaciones(); // Refrescar lista de formaciones
+    } catch (error) {
+      console.error('Error al cerrar la formación:', error);
+      alert('No se pudo cerrar la formación. Inténtalo de nuevo.');
+    }
+  };
+
+  const updateEstado = async (id, nuevoEstado) => {
+    try {
+      await axios.patch(`http://localhost:3001/estudiantes-formaciones/${id}`, {
+        estado: nuevoEstado,
+      });
+      alert(`Estado actualizado a ${nuevoEstado}`);
+      fetchParticipantes(); // Refrescar la lista de participantes
+    } catch (error) {
+      console.error('Error al actualizar el estado:', error);
+      alert('No se pudo actualizar el estado. Inténtalo de nuevo.');
+    }
+  };
+
+  const renderActiveView = () => {
+    if (activeView === 'asistencias') {
+      return (
+        <div>
+          <h2>Asistencias para {selectedFormacion?.nombre}</h2>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Estudiante</TableHead>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Asistió</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {activeData.map((asistencia) => (
+                <TableRow key={asistencia.id}>
+                  <TableCell>{asistencia.estudiante.nombreCompleto}</TableCell>
+                  <TableCell>{asistencia.fechaSesion}</TableCell>
+                  <TableCell>{asistencia.asistio ? 'Sí' : 'No'}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      );
+    }
+  
+    if (activeView === 'participantesFormacion') {
+      return (
+        <div>
+          <h2>Participantes para {selectedFormacion?.nombre}</h2>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Estudiante</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {activeData.map((participante) => (
+                <TableRow key={participante.id}>
+                  <TableCell>{participante.estudiante.nombreCompleto}</TableCell>
+                  <TableCell>{participante.estado}</TableCell>
+                  <TableCell>
+                    <Button onClick={() => updateEstado(participante.id, 'aprobado')}>Aprobó</Button>
+                    <Button onClick={() => updateEstado(participante.id, 'reprobado')}>Reprobó</Button>
+                    <Button onClick={() => updateEstado(participante.id, 'desertor')}>Desertó</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      );
+    }
+  
+    return null;
+  };
+  
+
   const renderContent = () => {
     switch (activeSection) {
       case 'formaciones':
@@ -256,15 +395,26 @@ export default function MainLayout() {
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(formacion, 'formacion')}><Edit className="h-4 w-4" /></Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
-                            <DropdownMenuItem onSelect={() => handleDelete(formacion.id, 'formacion')}>
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              <span>Eliminar</span>
+                            <DropdownMenuItem onSelect={() => handleViewAsistencias(formacion)}>
+                              Mostrar Asistencias
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleViewParticipantes(formacion)}>
+                              Mostrar Participantes
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleViewConstancias(formacion)}>
+                              Ver Constancias
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleCloseFormacion(formacion.id)}>
+                              Cerrar Formación
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
+
                       </div>
                     </TableCell>
                   </TableRow>
@@ -273,6 +423,67 @@ export default function MainLayout() {
             </Table>
           </div>
         )
+        case 'asistencias':
+          return (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h2>Asistencias para {selectedFormacion?.nombre}</h2>
+                <Button onClick={() => setActiveView(null)}>Volver</Button>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Estudiante</TableHead>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Asistió</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {activeData.map((asistencia) => (
+                    <TableRow key={asistencia.id}>
+                      <TableCell>{asistencia.estudiante.nombreCompleto}</TableCell>
+                      <TableCell>{asistencia.fechaSesion}</TableCell>
+                      <TableCell>{asistencia.asistio ? 'Sí' : 'No'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )
+
+    
+        case 'participantesFormacion':
+          return (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h2>Participantes para {selectedFormacion?.nombre}</h2>
+                <Button onClick={() => setActiveView(null)}>Volver</Button>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Estudiante</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {activeData.map((participante) => (
+                    <TableRow key={participante.id}>
+                      <TableCell>{participante.estudiante.nombreCompleto}</TableCell>
+                      <TableCell>{participante.estado}</TableCell>
+                      <TableCell>
+                        <Button onClick={() => updateEstado(participante.id, 'aprobado')}>Aprobó</Button>
+                        <Button onClick={() => updateEstado(participante.id, 'reprobado')}>Reprobó</Button>
+                        <Button onClick={() => updateEstado(participante.id, 'desertor')}>Desertó</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )
+
       case 'estudiantes':
         return (
           <div>
@@ -656,7 +867,7 @@ export default function MainLayout() {
 
       {/* Main content */}
       <main className="flex-1 p-8 overflow-auto">
-        {renderContent()}
+        {activeView ? renderActiveView() : renderContent()}
       </main>
 
       {/* Modals */}
