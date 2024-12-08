@@ -9,17 +9,29 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const router = useRouter();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => { 
     e.preventDefault();
 
-    // Asegúrate de que la función login esté bien implementada
-    const isAuthenticated = login(email, password);
-    if (isAuthenticated) {
+    try {
+      const response = await fetch('http://localhost:3001/usuarios/login', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json', 
+        }, 
+        body: JSON.stringify({ correo: email, clave: password }),
+    });
+
+    if(response.ok){
+      const data = await response.json(); 
       router.push('/dashboard');
     } else {
-      alert('Credenciales incorrectas');
+      const errorData = await response.json();
+      alert(errorData.message || 'Credenciales incorrectas');
     }
-  };
+  } catch (error){
+    console.error('Error al iniciar sesión:', error);
+    alert('Error al iniciar sesión. Por favor, inténtelo de nuevo.');
+  }
+};
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-purple-100">
@@ -63,12 +75,5 @@ function LoginForm() {
     </div>
   );
 }
-
-// Simulando la función login para el ejemplo
-const login = (email, password) => {
-  // Aquí implementa tu lógica de autenticación
-  // Retorna true si las credenciales son correctas, false si no lo son
-  return email === 'escueladetutores@ucn.cl' && password === 'password';
-};
 
 export default LoginForm;
