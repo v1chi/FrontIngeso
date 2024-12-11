@@ -224,7 +224,7 @@ export default function MainLayout() {
   
   const handleViewParticipantes = async (formacion) => {
     try {
-      const response = await axios.get(`http://localhost:3001/estudiantes-formaciones?formacionId=${formacion.id}`);
+      const response = await axios.get(`http://localhost:3001/estudiantes-formaciones/formacion/${formacion.id}`);
       console.log('Participantes:', response.data);
       setActiveData(response.data || []); // Guardar los participantes
       setSelectedFormacion(formacion); // Guardar la formación seleccionada
@@ -314,7 +314,10 @@ export default function MainLayout() {
     if (activeView === 'participantesFormacion') {
       return (
         <div>
-          <h2>Participantes para {selectedFormacion?.nombre}</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2>Participantes para {selectedFormacion?.nombre}</h2>
+            <Button onClick={() => setActiveView('formaciones')}>Volver</Button> {/* Asegúrate de que 'formaciones' esté entre comillas */}
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -452,37 +455,7 @@ export default function MainLayout() {
           )
 
     
-        case 'participantesFormacion':
-          return (
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2>Participantes para {selectedFormacion?.nombre}</h2>
-                <Button onClick={() => setActiveView(null)}>Volver</Button>
-              </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Estudiante</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {activeData.map((participante) => (
-                    <TableRow key={participante.id}>
-                      <TableCell>{participante.estudiante.nombreCompleto}</TableCell>
-                      <TableCell>{participante.estado}</TableCell>
-                      <TableCell>
-                        <Button onClick={() => updateEstado(participante.id, 'aprobado')}>Aprobó</Button>
-                        <Button onClick={() => updateEstado(participante.id, 'reprobado')}>Reprobó</Button>
-                        <Button onClick={() => updateEstado(participante.id, 'desertor')}>Desertó</Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )
+
 
       case 'estudiantes':
         return (
@@ -761,7 +734,7 @@ export default function MainLayout() {
                             {header}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0 ml-2">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 p-0 ml-2">
                                   <Filter className="h-4 w-4" />
                                   <span className="sr-only">Filtrar {header}</span>
                                 </Button>
