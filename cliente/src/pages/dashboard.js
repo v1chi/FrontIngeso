@@ -173,14 +173,42 @@ export default function MainLayout() {
   }
 
   const exportToExcelFormaciones = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredFormaciones);
+    // Filtrar las competencias
+    const filteredData = filteredFormaciones.map(formacion => {
+      const { competencias, ...rest } = formacion; // Excluir competencias
+      return {
+        ...rest,
+        fechaInicio: new Date(formacion.fechaInicio).toLocaleDateString(), // Formatear fecha de inicio
+        fechaTermino: new Date(formacion.fechaTermino).toLocaleDateString() // Formatear fecha de término
+      };
+    });
+  
+    // Crear la hoja de cálculo
+    const worksheet = XLSX.utils.json_to_sheet(filteredData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'ReporteFormaciones');
     XLSX.writeFile(workbook, 'ReporteFormaciones.xlsx');
-  }
+  };
 
   const exportToExcelEstudiante = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredParticipantes);
+    // Filtrar y formatear los datos
+    const filteredData = filteredParticipantes.map(participante => {
+      const { estudiante, formacion, estado } = participante;
+      return {
+        RUT: estudiante.rut,
+        Carrera: estudiante.carrera,
+        Semestre: formacion.semestre,
+        Nombre: estudiante.nombreCompleto,
+        Correo: estudiante.correo,
+        'Nombre Formación': formacion.nombre,
+        Estado: estado,
+        'Fecha de Inicio': formacion.fechaInicio ? new Date(formacion.fechaInicio).toLocaleDateString() : 'Sin fecha',
+        'Fecha de Término': formacion.fechaTermino ? new Date(formacion.fechaTermino).toLocaleDateString() : 'Sin fecha'
+      };
+    });
+  
+    // Crear la hoja de cálculo
+    const worksheet = XLSX.utils.json_to_sheet(filteredData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'ReporteParticipantes');
     XLSX.writeFile(workbook, 'ReporteParticipantes.xlsx');
