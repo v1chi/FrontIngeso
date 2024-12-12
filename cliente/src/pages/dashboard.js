@@ -194,17 +194,175 @@
       setModalType(type)
       setIsEditModalOpen(true)
     }
+  };
 
-    const handleDelete = (id, type) => {
-      console.log(`Eliminando ${type} con ID: ${id}`)
-      // Aquí iría la lógica para eliminar el elemento
+  const renderActiveView = () => {
+    if (activeView === 'asistencias') {
+      return (
+        <div>
+          <h2>Asistencias para {selectedFormacion?.nombre}</h2>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Estudiante</TableHead>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Asistió</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {activeData.map((asistencia) => (
+                <TableRow key={asistencia.id}>
+                  <TableCell>{asistencia.estudiante.nombreCompleto}</TableCell>
+                  <TableCell>{asistencia.fechaSesion}</TableCell>
+                  <TableCell>{asistencia.asistio ? 'Sí' : 'No'}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <Button onClick={() => window.location.reload()}>Volver</Button>
+        </div>
+      );
     }
+  
+    if (activeView === 'participantesFormacion') {
+      return (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2>Participantes para {selectedFormacion?.nombre}</h2>
+            <Button onClick={() => window.location.reload()}>Volver</Button> {/* Asegúrate de que 'formaciones' esté entre comillas */}
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Estudiante</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {activeData.map((participante) => (
+                <TableRow key={participante.id}>
+                  <TableCell>{participante.estudiante.nombreCompleto}</TableCell>
+                  <TableCell>{participante.estado}</TableCell>
+                  <TableCell>
+                    <Button onClick={() => updateEstado(participante.id, 'aprobado')}>Aprobó</Button>
+                    <Button onClick={() => updateEstado(participante.id, 'reprobado')}>Reprobó</Button>
+                    <Button onClick={() => updateEstado(participante.id, 'desertor')}>Desertó</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      );
+    }
+  
+    return null;
+  };
+  
 
-    const handleSave = (data) => {
-      console.log("Guardando datos:", data)
-      // Aquí iría la lógica para guardar los datos
-      setIsEditModalOpen(false)
-    }
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'formaciones':
+        return (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Formaciones</h2>
+              <Button onClick={() => handleAdd('formacion')}>+ Agregar Formación</Button>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Id</TableHead>
+                  <TableHead>Sede</TableHead>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Modalidad</TableHead>
+                  <TableHead>Semestre</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Relator</TableHead>
+                  <TableHead>Fecha de Inicio</TableHead>
+                  <TableHead>Fecha de Término</TableHead>
+                  <TableHead>Aprobados</TableHead>
+                  <TableHead>Reprobados</TableHead>
+                  <TableHead>Deserción</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {formaciones.map((formacion) => (
+                  <TableRow key={formacion.id}>
+                    <TableCell>{formacion.id}</TableCell>
+                    <TableCell>{formacion.sedeFormacion}</TableCell>
+                    <TableCell>{formacion.nombre}</TableCell>
+                    <TableCell>{formacion.modalidad}</TableCell>
+                    <TableCell>{formacion.semestre}</TableCell>
+                    <TableCell>{formacion.estado}</TableCell>
+                    <TableCell>{formacion.profesorRelator}</TableCell>
+                    <TableCell>{format(new Date(formacion.fechaInicio), 'yyyy-MM-dd')}</TableCell>
+                    <TableCell>{format(new Date(formacion.fechaTermino), 'yyyy-MM-dd')}</TableCell>
+                    <TableCell>{formacion.aprobados}</TableCell>
+                    <TableCell>{formacion.reprobados}</TableCell>
+                    <TableCell>{formacion.desercion}</TableCell>
+                    <TableCell>{formacion.total}</TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleView(formacion, 'formacion')}><Eye className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(formacion, 'formacion')}><Edit className="h-4 w-4" /></Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onSelect={() => handleViewAsistencias(formacion)}>
+                              Mostrar Asistencias
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleViewParticipantes(formacion)}>
+                              Mostrar Participantes
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleCloseFormacion(formacion.id)}>
+                              Cerrar Formación
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )
+        case 'asistencias':
+          return (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h2>Asistencias para {selectedFormacion?.nombre}</h2>
+                <Button onClick={() => setActiveView(null)}>Volver</Button>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Estudiante</TableHead>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Asistió</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {activeData.map((asistencia) => (
+                    <TableRow key={asistencia.id}>
+                      <TableCell>{asistencia.estudiante.nombreCompleto}</TableCell>
+                      <TableCell>{asistencia.fechaSesion}</TableCell>
+                      <TableCell>{asistencia.asistio ? 'Sí' : 'No'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )
 
     const handleViewAsistencias = async (formacion) => {
       try {

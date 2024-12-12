@@ -77,33 +77,6 @@ export default function ViewDetailsModal({ isOpen, onClose, data, type }: ViewDe
             <p><strong>Descripción:</strong> {data.descripcion}</p>
           </div>
         )
-      case "participantes":
-        return (
-          <div className="mt-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Estudiante</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.map((participante) => (
-                  <TableRow key={participante.id}>
-                    <TableCell>{participante.estudiante.nombreCompleto}</TableCell>
-                    <TableCell>{participante.estado}</TableCell>
-                    <TableCell>
-                      <Button>Aprobó</Button>
-                      <Button>Reprobó</Button>
-                      <Button>Desertó</Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )
       default:
         return <p>Tipo de detalle no reconocido</p>
     }

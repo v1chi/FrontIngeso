@@ -19,6 +19,7 @@ interface AddModalProps {
 }
 
 interface Competencia {
+  id: number;
   codigo: string;
   nombre: string;
   descripcion?: string; // Opcional
@@ -27,9 +28,8 @@ interface Competencia {
 export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProps) {
   const [formData, setFormData] = useState({});
   const [competencias, setCompetencias] = useState<Competencia[]>([]);
-  const [selectedCompetencias, setSelectedCompetencias] = useState<string[]>([]); // Competencias seleccionadas
+  const [selectedCompetencias, setSelectedCompetencias] = useState<number[]>([]); // Competencias seleccionadas
   const [showCompetencias, setShowCompetencias] = useState(false);
-  console.log(`ACA ESTA LA URL : ${process.env.NEXT_PUBLIC_API_BASE_URL}`);
   useEffect(() => {
     if (type === 'competencia') {
       setFormData({ 
@@ -93,13 +93,14 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
   };
 
   const handleCompetenciaSelect = (codigo: string) => {
-    if (!selectedCompetencias.includes(codigo)) {
-      setSelectedCompetencias((prev) => [...prev, codigo]);
+    const competencia = competencias.find(comp => comp.codigo === codigo);
+    if (competencia && !selectedCompetencias.includes(competencia.id)) {
+      setSelectedCompetencias((prev) => [...prev, competencia.id]);
     }
     setShowCompetencias(false); // Cerrar modal después de seleccionar
   };
 
-  const handleCompetenciaRemove = (id: string) => {
+  const handleCompetenciaRemove = (id: number) => {
     setSelectedCompetencias((prev) => prev.filter((compId) => compId !== id));
   };
 
@@ -132,6 +133,12 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
       addData(`${process.env.NEXT_PUBLIC_API_BASE_URL}/usuarios`, formData);
     } else if (type === 'formacion') {
       addData(`${process.env.NEXT_PUBLIC_API_BASE_URL}/formaciones`, formData);
+      const formacionData = {
+        ...formData,
+        competencias: selectedCompetencias // Incluir competencias seleccionadas
+      };
+      console.log('Enviando datos de formación:', formacionData);
+      addData('http://localhost:3001/formaciones', formacionData);
     }
   };
 
@@ -273,137 +280,140 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
         );
       case 'formacion':
         return (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="sedeFormacion">Sede</Label>
-              <Select name="sedeFormacion" onValueChange={(value) => handleSelectChange("sedeFormacion", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar sede" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Antofagasta">Antofagasta</SelectItem>
-                  <SelectItem value="Coquimbo">Coquimbo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-      
-            {/* Nombre */}
-            <div className="space-y-2">
-              <Label htmlFor="nombre">Nombre</Label>
-              <Select
-                name="nombre"
-                onValueChange={(value) => handleSelectChange("nombre", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar tipo de formación" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Formación Inicial">Formación Inicial</SelectItem>
-                  <SelectItem value="Formación Avanzada">Formación Avanzada</SelectItem>
-                  <SelectItem value="Formación Especializada">Formación Especializada</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-      
-            {/* Modalidad */}
-            <div className="space-y-2">
-              <Label htmlFor="modalidad">Modalidad</Label>
-              <Select name="modalidad" onValueChange={(value) => handleSelectChange("modalidad", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar modalidad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Presencial">Presencial</SelectItem>
-                  <SelectItem value="Online">Online</SelectItem>
-                  <SelectItem value="B-Learning">B-Learning</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-      
-            {/* Periodo */}
-            <div className="space-y-2">
-              <Label htmlFor="semestre">Periodo</Label>
-              <Input id="semestre" name="semestre" onChange={handleInputChange} />
-            </div>
-      
-            {/* Relator */}
-            <div className="space-y-2">
-              <Label htmlFor="profesorRelator">Relator</Label>
-              <Input id="profesorRelator" name="profesorRelator" onChange={handleInputChange} />
-            </div>
-      
-            {/* Fecha inicio */}
-            <div className="space-y-2">
-              <Label htmlFor="fechaInicio">Fecha de Inicio</Label>
-              <Input type="date" id="fechaInicio" name="fechaInicio" onChange={handleInputChange} />
-            </div>
-      
-            {/* Fecha termino */}
-            <div className="space-y-2">
-              <Label htmlFor="fechaTermino">Fecha de Término</Label>
-              <Input type="date" id="fechaTermino" name="fechaTermino" onChange={handleInputChange} />
-            </div>
-      
-            {/* Competencias */}
-            {/* Nueva sección para gestionar competencias */}
-            <div className="space-y-4">
-              <Label>Competencias:</Label>
-              <Button variant="outline" onClick= {(e) => { e.preventDefault();  setShowCompetencias(true)}}>
-                Añadir Competencia
-              </Button>
-              <div className="mt-2">
-                {selectedCompetencias.map((codigo) => (
-                  <div key={codigo} className="flex justify-between items-center">
-                    <span>{codigo}</span>
-                    <Button
-                      variant="outline"
-                      onClick={() => handleCompetenciaRemove(codigo)}
-                    >
-                      Quitar
-                    </Button>
-                  </div>
-                ))}
+          <div className="max-h-screen overflow-y-auto p-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="sedeFormacion">Sede</Label>
+                <Select name="sedeFormacion" onValueChange={(value) => handleSelectChange("sedeFormacion", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar sede" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Antofagasta">Antofagasta</SelectItem>
+                    <SelectItem value="Coquimbo">Coquimbo</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-      
-            {/* Modal para seleccionar competencias */}
-            {showCompetencias && (
-              <Dialog open={showCompetencias} onOpenChange={() => setShowCompetencias(false)}>
-                <DialogContent className="sm:max-w-[450px]">
-                  <DialogHeader>
-                    <DialogTitle>Seleccionar Competencia</DialogTitle>
-                  </DialogHeader>
-                  <div className="mt-4 space-y-2">
-                    {competencias.map((competencia) => (
-                      <div key={competencia.codigo} className="flex justify-between items-center">
-                        <span>{competencia.nombre}</span>
-                        <Button
-                          variant="outline"
-                          onClick={() => handleCompetenciaSelect(competencia.codigo)}
-                        >
-                          Agregar
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="pt-4 flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setShowCompetencias(false)}>
-                      Cerrar
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
+        
+              {/* Nombre */}
+              <div className="space-y-2">
+                <Label htmlFor="nombre">Nombre</Label>
+                <Select
+                  name="nombre"
+                  onValueChange={(value) => handleSelectChange("nombre", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar tipo de formación" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Formación Inicial">Formación Inicial</SelectItem>
+                    <SelectItem value="Formación Avanzada">Formación Avanzada</SelectItem>
+                    <SelectItem value="Formación Especializada">Formación Especializada</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+        
+              {/* Modalidad */}
+              <div className="space-y-2">
+                <Label htmlFor="modalidad">Modalidad</Label>
+                <Select name="modalidad" onValueChange={(value) => handleSelectChange("modalidad", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar modalidad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Presencial">Presencial</SelectItem>
+                    <SelectItem value="Online">Online</SelectItem>
+                    <SelectItem value="B-Learning">B-Learning</SelectItem>
+                    <SelectItem value="Híbrido">Híbrido</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+        
+              {/* Periodo */}
+              <div className="space-y-2">
+                <Label htmlFor="semestre">Periodo</Label>
+                <Input id="semestre" name="semestre" onChange={handleInputChange} />
+              </div>
+        
+              {/* Relator */}
+              <div className="space-y-2">
+                <Label htmlFor="profesorRelator">Relator</Label>
+                <Input id="profesorRelator" name="profesorRelator" onChange={handleInputChange} />
+              </div>
+        
+              {/* Fecha inicio */}
+              <div className="space-y-2">
+                <Label htmlFor="fechaInicio">Fecha de Inicio</Label>
+                <Input type="date" id="fechaInicio" name="fechaInicio" onChange={handleInputChange} />
+              </div>
+        
+              {/* Fecha termino */}
+              <div className="space-y-2">
+                <Label htmlFor="fechaTermino">Fecha de Término</Label>
+                <Input type="date" id="fechaTermino" name="fechaTermino" onChange={handleInputChange} />
+              </div>
+        
+              {/* Competencias */}
+              {/* Nueva sección para gestionar competencias */}
+              <div className="space-y-4">
+                <Label>Competencias:</Label>
+                <Button variant="outline" onClick= {(e) => { e.preventDefault();  setShowCompetencias(true)}}>
+                  Añadir Competencia
+                </Button>
+                <div className="mt-2">
+                  {selectedCompetencias.map((codigo) => (
+                    <div key={codigo} className="flex justify-between items-center">
+                      <span>{codigo}</span>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleCompetenciaRemove(codigo)}
+                      >
+                        Quitar
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+        
+              {/* Modal para seleccionar competencias */}
+              {showCompetencias && (
+                <Dialog open={showCompetencias} onOpenChange={() => setShowCompetencias(false)}>
+                  <DialogContent className="sm:max-w-[450px]">
+                    <DialogHeader>
+                      <DialogTitle>Seleccionar Competencia</DialogTitle>
+                    </DialogHeader>
+                    <div className="mt-4 space-y-2">
+                      {competencias.map((competencia) => (
+                        <div key={competencia.codigo} className="flex justify-between items-center">
+                          <span>{competencia.nombre}</span>
+                          <Button
+                            variant="outline"
+                            onClick={() => handleCompetenciaSelect(competencia.codigo)}
+                          >
+                            Agregar
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="pt-4 flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setShowCompetencias(false)}>
+                        Cerrar
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
 
-            <div className="pt-4 flex justify-end space-x-2">
-              <Button variant="outline" onClick={onClose}>
-                Cancelar
-              </Button>
-              <Button type="submit">
-                Agregar Formación
-              </Button>
-            </div>
-          </form>
+              <div className="pt-4 flex justify-end space-x-2">
+                <Button variant="outline" onClick={onClose}>
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  Agregar Formación
+                </Button>
+              </div>
+              </form>
+          </div>
         )
       default:
         return <p>Tipo de formulario no reconocido</p>;

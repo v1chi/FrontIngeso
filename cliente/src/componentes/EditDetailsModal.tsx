@@ -252,68 +252,83 @@ export default function EditDetailsModal({ isOpen, onClose, data, type, onSave }
       )
     } else if (type === "formacion"){
       return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="sedeFormacion">Sede</Label>
-              <Select name="sedeFormacion" defaultValue={formData.sede} onValueChange={(value) =>   handleSelectChange("sedeFormacion", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar sede" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Antofagasta">Antofagasta</SelectItem>
-                  <SelectItem value="Coquimbo">Coquimbo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <div className="max-h-screen overflow-y-auto p-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="sedeFormacion">Sede</Label>
+                <Select name="sedeFormacion" defaultValue={formData.sede} onValueChange={(value) =>   handleSelectChange("sedeFormacion", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar sede" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Antofagasta">Antofagasta</SelectItem>
+                    <SelectItem value="Coquimbo">Coquimbo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="nombre">Nombre</Label>
-              <Input id="nombre" name="nombre" value={formData.nombre} onChange={handleInputChange} />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="nombre">Nombre</Label>
+                <Select
+                    name="nombre"
+                    onValueChange={(value) => handleSelectChange("nombre", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar tipo de formación" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Formación Inicial">Formación Inicial</SelectItem>
+                      <SelectItem value="Formación Avanzada">Formación Avanzada</SelectItem>
+                      <SelectItem value="Formación Especializada">Formación Especializada</SelectItem>
+                    </SelectContent>
+                  </Select>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="modalidad">Modalidad</Label>
-              <Select name="modalidad" defaultValue={formData.modalidad} onValueChange={(value) => handleSelectChange("modalidad", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar modalidad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Presencial">Presencial</SelectItem>
-                  <SelectItem value="Online">Online</SelectItem>
-                  <SelectItem value="B-Learning">B-Learning</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="modalidad">Modalidad</Label>
+                <Select name="modalidad" defaultValue={formData.modalidad} onValueChange={(value) => handleSelectChange("modalidad", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar modalidad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Presencial">Presencial</SelectItem>
+                    <SelectItem value="Online">Online</SelectItem>
+                    <SelectItem value="B-Learning">B-Learning</SelectItem>
+                    <SelectItem value="Híbrido">Híbrido</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="semestre">Periodo</Label>
-              <Input id="semestre" name="semestre" value={formData.periodo} onChange={handleInputChange} />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="semestre">Periodo</Label>
+                <Input id="semestre" name="semestre" value={formData.periodo} onChange={handleInputChange} />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="profesorRelator">Relator</Label>
-              <Input id="profesorRelator" name="profesorRelator" value={formData.relator} onChange={handleInputChange} />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="profesorRelator">Relator</Label>
+                <Input id="profesorRelator" name="profesorRelator" value={formData.relator} onChange={handleInputChange} />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="fechaInicio">Fecha de Inicio</Label>
-              <Input type="date" id="fechaInicio" name="fechaInicio" value={formData.fechaInicio} onChange={handleInputChange} />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="fechaInicio">Fecha de Inicio</Label>
+                <Input type="date" id="fechaInicio" name="fechaInicio" value={formData.fechaInicio} onChange={handleInputChange} />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="fechaTermino">Fecha de Término</Label>
-              <Input type="date" id="fechaTermino" name="fechaTermino" value={formData.fechaTermino} onChange={handleInputChange} />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="fechaTermino">Fecha de Término</Label>
+                <Input type="date" id="fechaTermino" name="fechaTermino" value={formData.fechaTermino} onChange={handleInputChange} />
+              </div>
 
-            <div className="pt-4 flex justify-end space-x-2">
-              <Button variant="outline" onClick={onClose}>
-                Cancelar
-              </Button>
-              <Button type="submit">
-                Guardar Cambios
-              </Button>
-            </div>
-          </form>
+              <div className="pt-4 flex justify-end space-x-2">
+                <Button variant="outline" onClick={onClose}>
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  Guardar Cambios
+                </Button>
+              </div>
+            </form>
+          </div>
         )
     }
     return <p>Tipo de formulario no reconocido</p>;
