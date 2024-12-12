@@ -5,7 +5,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog.tsx"
-import { Table, TableHeader } from './ui/table.js';
 
 
 interface ViewDetailsModalProps {
@@ -75,33 +74,6 @@ export default function ViewDetailsModal({ isOpen, onClose, data, type }: ViewDe
             <p><strong>Código:</strong> {data.codigo}</p>
             <p><strong>Nombre:</strong> {data.nombre}</p>
             <p><strong>Descripción:</strong> {data.descripcion}</p>
-          </div>
-        )
-      case "participantes":
-        return (
-          <div className="mt-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Estudiante</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.map((participante) => (
-                  <TableRow key={participante.id}>
-                    <TableCell>{participante.estudiante.nombreCompleto}</TableCell>
-                    <TableCell>{participante.estado}</TableCell>
-                    <TableCell>
-                      <Button onClick={() => updateEstado(participante.id, 'aprobado')}>Aprobó</Button>
-                      <Button onClick={() => updateEstado(participante.id, 'reprobado')}>Reprobó</Button>
-                      <Button onClick={() => updateEstado(participante.id, 'desertor')}>Desertó</Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
           </div>
         )
       default:

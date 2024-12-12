@@ -316,7 +316,7 @@ export default function MainLayout() {
         <div>
           <div className="flex justify-between items-center mb-4">
             <h2>Participantes para {selectedFormacion?.nombre}</h2>
-            <Button onClick={() => setActiveView('formaciones')}>Volver</Button> {/* Asegúrate de que 'formaciones' esté entre comillas */}
+            <Button onClick={() => window.location.reload()}>Volver</Button> {/* Asegúrate de que 'formaciones' esté entre comillas */}
           </div>
           <Table>
             <TableHeader>
