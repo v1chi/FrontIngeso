@@ -19,6 +19,7 @@ interface AddModalProps {
 }
 
 interface Competencia {
+  id: number;
   codigo: string;
   nombre: string;
   descripcion?: string; // Opcional
@@ -27,7 +28,7 @@ interface Competencia {
 export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProps) {
   const [formData, setFormData] = useState({});
   const [competencias, setCompetencias] = useState<Competencia[]>([]);
-  const [selectedCompetencias, setSelectedCompetencias] = useState<string[]>([]); // Competencias seleccionadas
+  const [selectedCompetencias, setSelectedCompetencias] = useState<number[]>([]);
   const [showCompetencias, setShowCompetencias] = useState(false);
 
   useEffect(() => {
@@ -93,16 +94,16 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
   };
 
   const handleCompetenciaSelect = (codigo: string) => {
-    if (!selectedCompetencias.includes(codigo)) {
-      setSelectedCompetencias((prev) => [...prev, codigo]);
+    const competencia = competencias.find(comp => comp.codigo === codigo);
+    if (competencia && !selectedCompetencias.includes(competencia.id)) {
+      setSelectedCompetencias((prev) => [...prev, competencia.id]);
     }
     setShowCompetencias(false); // Cerrar modal después de seleccionar
   };
 
-  const handleCompetenciaRemove = (id: string) => {
+  const handleCompetenciaRemove = (id: number) => {
     setSelectedCompetencias((prev) => prev.filter((compId) => compId !== id));
   };
-
 
 
 
@@ -129,7 +130,12 @@ export default function AddModal({ isOpen, onClose, type, onSave }: AddModalProp
     } else if (type === 'usuario') {
       addData('http://localhost:3001/usuarios', formData);
     } else if (type === 'formacion') {
-      addData('http://localhost:3001/formaciones', formData);
+      const formacionData = {
+        ...formData,
+        competencias: selectedCompetencias // Incluir competencias seleccionadas
+      };
+      console.log('Enviando datos de formación:', formacionData);
+      addData('http://localhost:3001/formaciones', formacionData);
     }
   };
 

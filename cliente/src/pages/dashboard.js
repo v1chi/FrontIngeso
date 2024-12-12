@@ -284,19 +284,19 @@ export default function MainLayout() {
     try {
       // Solicitar al backend que cierre la formación
       const response = await axios.patch(`http://localhost:3001/formaciones/${formacionId}`, {
-        estado: 'cerrada',
+        estado: 'Cerrada',
       });
   
       // Opcional: Actualizar estadísticas locales
       const updatedFormaciones = formaciones.map((formacion) =>
-        formacion.id === formacionId ? { ...formacion, estado: 'cerrada' } : formacion
+        formacion.id === formacionId ? { ...formacion, estado: 'Cerrada' } : formacion
       );
       setFormaciones(updatedFormaciones);
   
       // Generar constancias para los aprobados
       //await axios.post(`http://localhost:3001/formaciones/${formacionId}/constancias`);
   
-      alert(`La formación con ID ${formacionId} ha sido cerrada y las constancias se han generado.`);
+      alert(`La formación con ID ${formacionId} ha sido cerrada.`);
       fetchFormaciones(); // Refrescar lista de formaciones
     } catch (error) {
       console.error('Error al cerrar la formación:', error);
@@ -708,7 +708,6 @@ export default function MainLayout() {
                         </div>
                       </TableHead>
                     ))}
-                    <TableHead>Sede</TableHead>
                     <TableHead>Periodo</TableHead>
                     <TableHead>Fecha de Inicio</TableHead>
                     <TableHead>Fecha de Término</TableHead>
