@@ -24,7 +24,6 @@ export default function MainLayout() {
   const [filteredFormaciones, setFilteredFormaciones] = useState(formaciones)
   const [filteredParticipantes, setFilteredParticipantes] = useState(reporteParticipantes)
   const [filters, setFilters] = useState({})
-  const [filter, setFilter] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -40,10 +39,6 @@ export default function MainLayout() {
   const [activeData, setActiveData] = useState([]); // Datos dinámicos de la vista activa
   
   
-  
-  const filteredEstudiantes = estudiantes.filter((estudiante) =>
-    estudiante.rut.includes(filter)
-  );
   
 
   async function fetchEstudiantes() {
@@ -135,7 +130,7 @@ export default function MainLayout() {
     if (dataType === 'formaciones') {
       const filtered = formaciones.filter(formacion => 
         Object.entries(newFilters).every(([k, v]) => 
-          !v || formacion[k]?.toString().toLowerCase().includes(v.toLowerCase())
+          v === '' || formacion[k].toString().toLowerCase().includes(v.toLowerCase())
         )
       )
       setFilteredFormaciones(filtered)
@@ -173,42 +168,14 @@ export default function MainLayout() {
   }
 
   const exportToExcelFormaciones = () => {
-    // Filtrar las competencias
-    const filteredData = filteredFormaciones.map(formacion => {
-      const { competencias, ...rest } = formacion; // Excluir competencias
-      return {
-        ...rest,
-        fechaInicio: new Date(formacion.fechaInicio).toLocaleDateString(), // Formatear fecha de inicio
-        fechaTermino: new Date(formacion.fechaTermino).toLocaleDateString() // Formatear fecha de término
-      };
-    });
-  
-    // Crear la hoja de cálculo
-    const worksheet = XLSX.utils.json_to_sheet(filteredData);
+    const worksheet = XLSX.utils.json_to_sheet(filteredFormaciones);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'ReporteFormaciones');
     XLSX.writeFile(workbook, 'ReporteFormaciones.xlsx');
-  };
+  }
 
   const exportToExcelEstudiante = () => {
-    // Filtrar y formatear los datos
-    const filteredData = filteredParticipantes.map(participante => {
-      const { estudiante, formacion, estado } = participante;
-      return {
-        RUT: estudiante.rut,
-        Carrera: estudiante.carrera,
-        Semestre: formacion.semestre,
-        Nombre: estudiante.nombreCompleto,
-        Correo: estudiante.correo,
-        'Nombre Formación': formacion.nombre,
-        Estado: estado,
-        'Fecha de Inicio': formacion.fechaInicio ? new Date(formacion.fechaInicio).toLocaleDateString() : 'Sin fecha',
-        'Fecha de Término': formacion.fechaTermino ? new Date(formacion.fechaTermino).toLocaleDateString() : 'Sin fecha'
-      };
-    });
-  
-    // Crear la hoja de cálculo
-    const worksheet = XLSX.utils.json_to_sheet(filteredData);
+    const worksheet = XLSX.utils.json_to_sheet(filteredParticipantes);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'ReporteParticipantes');
     XLSX.writeFile(workbook, 'ReporteParticipantes.xlsx');
@@ -284,19 +251,19 @@ export default function MainLayout() {
     try {
       // Solicitar al backend que cierre la formación
       const response = await axios.patch(`http://localhost:3001/formaciones/${formacionId}`, {
-        estado: 'Cerrada',
+        estado: 'cerrada',
       });
   
       // Opcional: Actualizar estadísticas locales
       const updatedFormaciones = formaciones.map((formacion) =>
-        formacion.id === formacionId ? { ...formacion, estado: 'Cerrada' } : formacion
+        formacion.id === formacionId ? { ...formacion, estado: 'cerrada' } : formacion
       );
       setFormaciones(updatedFormaciones);
   
       // Generar constancias para los aprobados
       //await axios.post(`http://localhost:3001/formaciones/${formacionId}/constancias`);
   
-      alert(`La formación con ID ${formacionId} ha sido cerrada.`);
+      alert(`La formación con ID ${formacionId} ha sido cerrada y las constancias se han generado.`);
       fetchFormaciones(); // Refrescar lista de formaciones
     } catch (error) {
       console.error('Error al cerrar la formación:', error);
@@ -340,6 +307,7 @@ export default function MainLayout() {
               ))}
             </TableBody>
           </Table>
+          <Button onClick={() => window.location.reload()}>Volver</Button>
         </div>
       );
     }
@@ -442,9 +410,6 @@ export default function MainLayout() {
                             <DropdownMenuItem onSelect={() => handleViewParticipantes(formacion)}>
                               Mostrar Participantes
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleViewConstancias(formacion)}>
-                              Ver Constancias
-                            </DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => handleCloseFormacion(formacion.id)}>
                               Cerrar Formación
                             </DropdownMenuItem>
@@ -546,16 +511,7 @@ export default function MainLayout() {
                       <SelectValue placeholder="Seleccionar estudiante" />
                     </SelectTrigger>
                     <SelectContent>
-                      <div className="p-2">
-                        <input
-                          type="text"
-                          value={filter}
-                          onChange={(e) => setFilter(e.target.value)}
-                          className="border p-2 w-full"
-                          placeholder="Escribe para filtrar"
-                        />
-                      </div>
-                      {filteredEstudiantes.map((estudiante) => (
+                      {estudiantes.map((estudiante) => (
                         <SelectItem key={estudiante.rut} value={estudiante.id}>
                           {estudiante.rut} - {estudiante.nombreCompleto}
                         </SelectItem>
@@ -563,6 +519,7 @@ export default function MainLayout() {
                     </SelectContent>
                   </Select>
                 </div>
+        
                 {/* Seleccionar formación por ID */}
                 <div>
                   <label className="block mb-2">ID de la Formación</label>
@@ -580,6 +537,7 @@ export default function MainLayout() {
                   </Select>
                 </div>
               </div>
+        
               {/* Botón para asociar */}
               <Button className="mt-4" onClick={handleAsociar}>
                 Asociar
@@ -674,14 +632,12 @@ export default function MainLayout() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                  <TableHead>Id</TableHead>
                     {[
                       { key: 'semestre', label: 'Semestre' },
                       { key: 'nombre', label: 'Nombre' },
                       { key: 'modalidad', label: 'Modalidad' },
                       { key: 'profesorRelator', label: 'Relator' },
                       { key: 'estado', label: 'Estado' },
-                      { key: 'sedeFormacion', label: 'Sede' },
                     ].map((column, index) => (
                       <TableHead key={index}>
                         <div className="flex items-center space-x-2">
@@ -708,6 +664,8 @@ export default function MainLayout() {
                         </div>
                       </TableHead>
                     ))}
+                    <TableHead>Id</TableHead>
+                    <TableHead>Sede</TableHead>
                     <TableHead>Periodo</TableHead>
                     <TableHead>Fecha de Inicio</TableHead>
                     <TableHead>Fecha de Término</TableHead>
@@ -722,12 +680,12 @@ export default function MainLayout() {
                 <TableBody>
                   {filteredFormaciones.map((formacion) => (
                     <TableRow key={formacion.id}>
-                      <TableCell>{formacion.id}</TableCell>
                       <TableCell>{formacion.semestre}</TableCell>
                       <TableCell>{formacion.nombre}</TableCell>
                       <TableCell>{formacion.modalidad}</TableCell>
                       <TableCell>{formacion.profesorRelator}</TableCell>
                       <TableCell>{formacion.estado}</TableCell>
+                      <TableCell>{formacion.id}</TableCell>
                       <TableCell>{formacion.sedeFormacion}</TableCell>
                       <TableCell>{formacion.semestre}</TableCell>
                       <TableCell>{new Date(formacion.fechaInicio).toLocaleDateString()}</TableCell>
