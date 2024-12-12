@@ -135,7 +135,7 @@ export default function MainLayout() {
     if (dataType === 'formaciones') {
       const filtered = formaciones.filter(formacion => 
         Object.entries(newFilters).every(([k, v]) => 
-          v === '' || formacion[k].toString().toLowerCase().includes(v.toLowerCase())
+          !v || formacion[k]?.toString().toLowerCase().includes(v.toLowerCase())
         )
       )
       setFilteredFormaciones(filtered)
@@ -646,12 +646,14 @@ export default function MainLayout() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                  <TableHead>Id</TableHead>
                     {[
                       { key: 'semestre', label: 'Semestre' },
                       { key: 'nombre', label: 'Nombre' },
                       { key: 'modalidad', label: 'Modalidad' },
                       { key: 'profesorRelator', label: 'Relator' },
                       { key: 'estado', label: 'Estado' },
+                      { key: 'sedeFormacion', label: 'Sede' },
                     ].map((column, index) => (
                       <TableHead key={index}>
                         <div className="flex items-center space-x-2">
@@ -678,7 +680,6 @@ export default function MainLayout() {
                         </div>
                       </TableHead>
                     ))}
-                    <TableHead>Id</TableHead>
                     <TableHead>Sede</TableHead>
                     <TableHead>Periodo</TableHead>
                     <TableHead>Fecha de Inicio</TableHead>
@@ -694,12 +695,12 @@ export default function MainLayout() {
                 <TableBody>
                   {filteredFormaciones.map((formacion) => (
                     <TableRow key={formacion.id}>
+                      <TableCell>{formacion.id}</TableCell>
                       <TableCell>{formacion.semestre}</TableCell>
                       <TableCell>{formacion.nombre}</TableCell>
                       <TableCell>{formacion.modalidad}</TableCell>
                       <TableCell>{formacion.profesorRelator}</TableCell>
                       <TableCell>{formacion.estado}</TableCell>
-                      <TableCell>{formacion.id}</TableCell>
                       <TableCell>{formacion.sedeFormacion}</TableCell>
                       <TableCell>{formacion.semestre}</TableCell>
                       <TableCell>{new Date(formacion.fechaInicio).toLocaleDateString()}</TableCell>
