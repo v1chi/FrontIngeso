@@ -5,8 +5,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog.tsx"
-import { Table, TableHeader } from './ui/table.js';
-
+import { Button } from './ui/button.tsx';
+import { Table, TableBody, TableRow, TableHeader, TableHead, TableFooter, TableCaption, TableCell } from './ui/table.js';
 
 interface ViewDetailsModalProps {
   isOpen: boolean;
@@ -94,9 +94,9 @@ export default function ViewDetailsModal({ isOpen, onClose, data, type }: ViewDe
                     <TableCell>{participante.estudiante.nombreCompleto}</TableCell>
                     <TableCell>{participante.estado}</TableCell>
                     <TableCell>
-                      <Button onClick={() => updateEstado(participante.id, 'aprobado')}>Aprobó</Button>
-                      <Button onClick={() => updateEstado(participante.id, 'reprobado')}>Reprobó</Button>
-                      <Button onClick={() => updateEstado(participante.id, 'desertor')}>Desertó</Button>
+                      <Button>Aprobó</Button>
+                      <Button>Reprobó</Button>
+                      <Button>Desertó</Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -110,13 +110,18 @@ export default function ViewDetailsModal({ isOpen, onClose, data, type }: ViewDe
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={onClose}
+      aria-labelledby="dialog-title"
+      aria-describedby="dialog-description"
+      >
       <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
           <DialogTitle>
             Detalles de {type.charAt(0).toUpperCase() + type.slice(1)}
           </DialogTitle>
-        </DialogHeader>
+        </DialogHeader> 
         <div className="mt-4">
           {renderDetails()}
         </div>
