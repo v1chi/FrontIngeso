@@ -24,6 +24,7 @@ export default function MainLayout() {
   const [filteredFormaciones, setFilteredFormaciones] = useState(formaciones)
   const [filteredParticipantes, setFilteredParticipantes] = useState(reporteParticipantes)
   const [filters, setFilters] = useState({})
+  const [filter, setFilter] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -39,6 +40,10 @@ export default function MainLayout() {
   const [activeData, setActiveData] = useState([]); // Datos dinámicos de la vista activa
   
   
+  
+  const filteredEstudiantes = estudiantes.filter((estudiante) =>
+    estudiante.rut.includes(filter)
+  );
   
 
   async function fetchEstudiantes() {
@@ -513,7 +518,16 @@ export default function MainLayout() {
                       <SelectValue placeholder="Seleccionar estudiante" />
                     </SelectTrigger>
                     <SelectContent>
-                      {estudiantes.map((estudiante) => (
+                      <div className="p-2">
+                        <input
+                          type="text"
+                          value={filter}
+                          onChange={(e) => setFilter(e.target.value)}
+                          className="border p-2 w-full"
+                          placeholder="Escribe para filtrar"
+                        />
+                      </div>
+                      {filteredEstudiantes.map((estudiante) => (
                         <SelectItem key={estudiante.rut} value={estudiante.id}>
                           {estudiante.rut} - {estudiante.nombreCompleto}
                         </SelectItem>
@@ -521,7 +535,6 @@ export default function MainLayout() {
                     </SelectContent>
                   </Select>
                 </div>
-        
                 {/* Seleccionar formación por ID */}
                 <div>
                   <label className="block mb-2">ID de la Formación</label>
@@ -539,7 +552,6 @@ export default function MainLayout() {
                   </Select>
                 </div>
               </div>
-        
               {/* Botón para asociar */}
               <Button className="mt-4" onClick={handleAsociar}>
                 Asociar
